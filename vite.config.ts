@@ -8,6 +8,10 @@ export default defineConfig(({ mode }) => {
       server: {
         port: 3000,
         host: '0.0.0.0',
+        // 2026 年 Vite 安全安全性要求，必須允許 Render 的網域
+        allowedHosts: [
+          'shuttle-master-ai.onrender.com'
+        ],
       },
       plugins: [react()],
       define: {
