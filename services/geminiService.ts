@@ -43,7 +43,7 @@ export const geminiService = {
     try {
       const ai = getAIClient();
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.0-flash-exp',
         contents: `從以下這段文字中提取羽球球友名單。
         請識別：姓名(name)、性別(gender: "男" 或 "女")、強度等級(level: 1-15 之間)。
         如果沒提到性別，請預設為 "男"。
@@ -85,8 +85,8 @@ export const geminiService = {
   },
 
   async suggestPairings(
-    availablePlayers: Player[], 
-    history: MatchHistory[], 
+    availablePlayers: Player[],
+    history: MatchHistory[],
     rounds: number = 5,
     currentQueue: string[][] = []
   ): Promise<string[][]> {
@@ -95,7 +95,7 @@ export const geminiService = {
     try {
       const ai = getAIClient();
       const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
+        model: 'gemini-2.0-flash-thinking-exp-1219',
         contents: `你是一位具備高度數據感與心理學背景的羽球俱樂部排點經理。你的目標是創造出既公平又充滿驚喜的對戰組合。
   
         請生成 ${rounds} 場組合，每場 4 人。
@@ -137,12 +137,16 @@ export const geminiService = {
 
       const data = JSON.parse(response.text || '{}');
       return data.suggestedRounds || [];
-    } catch (e) {
+    } catch (e: any) {
+      if (e.message && e.message.includes("API Key is missing")) {
+        throw e;
+      }
+      console.error("AI Pairing Failed:", e.message);
       // --- 本地強化後備演算法 (Local Fallback Algorithm) ---
       console.log("AI failed, using local fallback with weighted randomness.");
       const result: string[][] = [];
       const tempPlayers = availablePlayers.map(p => ({ ...p }));
-      
+
       for (let r = 0; r < rounds; r++) {
         // 1. 根據場次排序，增加隨機擾動避免每次都是同一批人
         const sortedPool = [...tempPlayers].sort((a, b) => {
@@ -153,7 +157,7 @@ export const geminiService = {
 
         // 2. 挑選前 6-8 位作為候選區（增加多樣性）
         const candidates = sortedPool.slice(0, Math.min(tempPlayers.length, 8));
-        
+
         // 3. 從候選區隨機抽 4 位
         const selected: string[] = [];
         const pool = [...candidates];
@@ -177,7 +181,7 @@ export const geminiService = {
     try {
       const ai = getAIClient();
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash-preview-tts",
+        model: "gemini-2.0-flash-exp",
         contents: [{ parts: [{ text: prompt }] }],
         config: {
           responseModalities: [Modality.AUDIO],

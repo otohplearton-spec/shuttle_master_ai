@@ -367,8 +367,12 @@ const App: React.FC = () => {
       const candidatePlayers = players.filter(p => !playingPlayerIds.has(p.id));
       const suggestedRounds = await geminiService.suggestPairings(candidatePlayers, history, roundsRequested, matchQueue);
       if (suggestedRounds.length > 0) setMatchQueue(prev => [...prev, ...suggestedRounds]);
-    } catch (error) {
-      alert("AI 排點失敗");
+    } catch (error: any) {
+      if (error.message && error.message.includes("API Key is missing")) {
+        alert("請先設定 Gemini API Key 才能使用 AI 排點功能！");
+      } else {
+        alert("AI 排點失敗");
+      }
     } finally {
       setIsScheduling(false);
     }
