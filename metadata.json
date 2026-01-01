@@ -1,0 +1,7 @@
+{
+  "name": "ShuttleMaster AI - 羽球智慧排點器",
+  "description": "一個專業級的羽球排點系統，具備智慧配對演算法與 AI 語音廣播功能，自動平衡場次與強度。",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
