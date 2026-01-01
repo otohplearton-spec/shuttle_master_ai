@@ -9,26 +9,87 @@ import QuickImportModal from './components/QuickImportModal';
 import { geminiService } from './services/geminiService';
 
 const App: React.FC = () => {
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [courts, setCourts] = useState<Court[]>([
-    { id: '1', name: '場地 A', players: [], isActive: false },
-    { id: '2', name: '場地 B', players: [], isActive: false }
-  ]);
-  const [matchQueue, setMatchQueue] = useState<string[][]>([]);
-  const [history, setHistory] = useState<MatchHistory[]>([]);
+  // --- Initialize State from LocalStorage ---
+
+  const [isSessionActive, setIsSessionActive] = useState(() => {
+    return localStorage.getItem('shuttle_session_active') === 'true';
+  });
+
+  const [players, setPlayers] = useState<Player[]>(() => {
+    const saved = localStorage.getItem('shuttle_players');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [courts, setCourts] = useState<Court[]>(() => {
+    const saved = localStorage.getItem('shuttle_courts');
+    if (saved) return JSON.parse(saved);
+    return [
+      { id: '1', name: '場地 A', players: [], isActive: false },
+      { id: '2', name: '場地 B', players: [], isActive: false }
+    ];
+  });
+
+  const [matchQueue, setMatchQueue] = useState<string[][]>(() => {
+    const saved = localStorage.getItem('shuttle_queue');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [history, setHistory] = useState<MatchHistory[]>(() => {
+    const saved = localStorage.getItem('shuttle_history');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [matchCount, setMatchCount] = useState(() => {
+    const saved = localStorage.getItem('shuttle_match_count');
+    return saved ? parseInt(saved, 10) : 0;
+  });
+
   const [isScheduling, setIsScheduling] = useState(false);
-  const [matchCount, setMatchCount] = useState(0);
   const [showImportModal, setShowImportModal] = useState(false);
-  
   const [resetStep, setResetStep] = useState(0);
 
-  // 自動廣播開關狀態，從 localStorage 讀取
+  // 自動廣播開關狀態
   const [isAutoBroadcastEnabled, setIsAutoBroadcastEnabled] = useState(() => {
     const saved = localStorage.getItem('isAutoBroadcastEnabled');
     return saved !== null ? JSON.parse(saved) : true;
   });
 
-  // 儲存開關狀態
+  // --- Persistence Effects ---
+
+  useEffect(() => {
+    localStorage.setItem('shuttle_session_active', String(isSessionActive));
+  }, [isSessionActive]);
+
+  useEffect(() => {
+    if (isSessionActive) {
+      localStorage.setItem('shuttle_players', JSON.stringify(players));
+    }
+  }, [players, isSessionActive]);
+
+  useEffect(() => {
+    if (isSessionActive) {
+      localStorage.setItem('shuttle_courts', JSON.stringify(courts));
+    }
+  }, [courts, isSessionActive]);
+
+  useEffect(() => {
+    if (isSessionActive) {
+      localStorage.setItem('shuttle_queue', JSON.stringify(matchQueue));
+    }
+  }, [matchQueue, isSessionActive]);
+
+  useEffect(() => {
+    if (isSessionActive) {
+      localStorage.setItem('shuttle_history', JSON.stringify(history));
+    }
+  }, [history, isSessionActive]);
+
+  useEffect(() => {
+    if (isSessionActive) {
+      localStorage.setItem('shuttle_match_count', String(matchCount));
+    }
+  }, [matchCount, isSessionActive]);
+
   useEffect(() => {
     localStorage.setItem('isAutoBroadcastEnabled', JSON.stringify(isAutoBroadcastEnabled));
   }, [isAutoBroadcastEnabled]);
@@ -39,6 +100,8 @@ const App: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [resetStep]);
+
+  // --- Derived State ---
 
   const playingPlayerIds = useMemo(() => {
     return new Set(courts.flatMap(c => c.players).filter(id => id !== ""));
@@ -55,10 +118,24 @@ const App: React.FC = () => {
     return all;
   }, [playingPlayerIds, queuedPlayerIds]);
 
-  const handleReset = () => {
+  // --- Handlers ---
+
+  const handleStartSession = () => {
+    setIsSessionActive(true);
+  };
+
+  const handleEndSession = () => {
     if (resetStep === 0) {
       setResetStep(1);
     } else {
+      // Clear Session Data
+      localStorage.removeItem('shuttle_players');
+      localStorage.removeItem('shuttle_courts');
+      localStorage.removeItem('shuttle_queue');
+      localStorage.removeItem('shuttle_history');
+      localStorage.removeItem('shuttle_match_count');
+
+      // Reset State
       setPlayers([]);
       setHistory([]);
       setMatchCount(0);
@@ -67,9 +144,14 @@ const App: React.FC = () => {
         { id: '1', name: '場地 A', players: [], isActive: false },
         { id: '2', name: '場地 B', players: [], isActive: false }
       ]);
+
+      setIsSessionActive(false);
       setResetStep(0);
     }
   };
+
+  // Deprecated: Old handleReset replaced by handleEndSession
+  // keeping logic just in case, but mapped to End Session button
 
   const addPlayer = (newPlayer: Omit<Player, 'id' | 'gamesPlayed'>) => {
     const player: Player = { ...newPlayer, id: crypto.randomUUID(), gamesPlayed: 0 };
@@ -138,16 +220,16 @@ const App: React.FC = () => {
       setPlayers(prev => prev.map(p => court.players.includes(p.id) ? { ...p, gamesPlayed: p.gamesPlayed + 1 } : p));
       setMatchCount(prev => prev + 1);
     }
-    
+
     setCourts(prev => prev.map(c => c.id === courtId ? { ...c, players: [], isActive: false } : c));
   };
 
   const assignMatchToCourt = (courtId: string, queueIndex: number = 0) => {
     if (matchQueue.length <= queueIndex) return;
-    
+
     const nextMatch = matchQueue[queueIndex];
     const newQueue = matchQueue.filter((_, i) => i !== queueIndex);
-    
+
     setMatchQueue(newQueue);
     setCourts(prev => prev.map(c => {
       if (c.id === courtId) {
@@ -174,14 +256,14 @@ const App: React.FC = () => {
       if (!updatedCourts[i].isActive && currentQueue.length > 0) {
         const nextMatch = currentQueue.shift()!;
         const courtName = updatedCourts[i].name;
-        
+
         updatedCourts[i] = {
           ...updatedCourts[i],
           players: nextMatch,
           isActive: true,
           startTime: Date.now()
         };
-        
+
         assignedCount++;
         const playerNames = players.filter(p => nextMatch.includes(p.id)).map(p => p.name);
         if (playerNames.length > 0 && isAutoBroadcastEnabled) {
@@ -199,6 +281,7 @@ const App: React.FC = () => {
   /**
    * --- 核心演算法：本地智慧排點 (極致平衡場次版) ---
    */
+  // ... (keep generateSmartRound exactly as is, but it's inside component, so we just use the existing one)
   const generateSmartRound = (currentPlayers: Player[], currentHistory: MatchHistory[], queueSoFar: string[][]): string[] | null => {
     const available = currentPlayers.filter(p => !playingPlayerIds.has(p.id));
     if (available.length < 4) return null;
@@ -253,10 +336,10 @@ const App: React.FC = () => {
       recentHistory.forEach(h => {
         const hT1 = h.teams[0];
         const hT2 = h.teams[1];
-        const isOpponentInHistory = (hT1.includes(team1Ids[0]) && hT2.includes(team2Ids[0])) || 
-                                    (hT1.includes(team1Ids[0]) && hT2.includes(team2Ids[1])) ||
-                                    (hT2.includes(team1Ids[0]) && hT1.includes(team2Ids[0])) ||
-                                    (hT2.includes(team1Ids[0]) && hT1.includes(team2Ids[1]));
+        const isOpponentInHistory = (hT1.includes(team1Ids[0]) && hT2.includes(team2Ids[0])) ||
+          (hT1.includes(team1Ids[0]) && hT2.includes(team2Ids[1])) ||
+          (hT2.includes(team1Ids[0]) && hT1.includes(team2Ids[0])) ||
+          (hT2.includes(team1Ids[0]) && hT1.includes(team2Ids[1]));
         if (isOpponentInHistory) penalty += 5;
       });
       if (penalty < minPenalty) {
@@ -361,6 +444,31 @@ const App: React.FC = () => {
     }));
   };
 
+  if (!isSessionActive) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
+        <div className="text-center space-y-8 max-w-lg">
+          <h1 className="text-6xl font-black bg-gradient-to-br from-indigo-400 to-purple-500 bg-clip-text text-transparent italic tracking-tighter">
+            SHUTTLE MASTER AI
+          </h1>
+          <p className="text-slate-400 text-lg">智慧羽球排點助手，讓每一場對局都精彩。</p>
+
+          <button
+            onClick={handleStartSession}
+            className="group relative inline-flex items-center justify-center px-8 py-4 text-xl font-bold text-white transition-all duration-200 bg-indigo-600 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 hover:bg-indigo-700 hover:scale-105"
+          >
+            開始本次活動 (Start Session)
+            <div className="absolute -inset-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 opacity-20 group-hover:opacity-40 blur-lg transition-opacity duration-200" />
+          </button>
+
+          <p className="text-slate-600 text-sm">
+            點擊開始後，系統將會自動保存您的所有名單與排程紀錄，<br />即使重新整理網頁也不會遺失，直到您點選「結束活動」。
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 p-4 md:p-8 flex flex-col items-center">
       <div className="w-full max-w-[1700px]">
@@ -387,7 +495,7 @@ const App: React.FC = () => {
                   {isAutoBroadcastEnabled ? '已開啟' : '已關閉'}
                 </span>
               </div>
-              <button 
+              <button
                 onClick={() => setIsAutoBroadcastEnabled(!isAutoBroadcastEnabled)}
                 className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isAutoBroadcastEnabled ? 'bg-indigo-600' : 'bg-slate-200'}`}
               >
@@ -395,15 +503,14 @@ const App: React.FC = () => {
               </button>
             </div>
 
-            <button 
-              onClick={handleReset} 
-              className={`px-4 py-2 rounded-2xl font-black transition-all shadow-sm text-sm border-2 ${
-                resetStep === 0 
-                ? 'bg-white border-slate-200 text-slate-400 hover:border-red-400 hover:text-red-500' 
-                : 'bg-red-500 border-red-600 text-white animate-pulse'
-              }`}
+            <button
+              onClick={handleEndSession}
+              className={`px-4 py-2 rounded-2xl font-black transition-all shadow-sm text-sm border-2 ${resetStep === 0
+                  ? 'bg-white border-slate-200 text-slate-400 hover:border-red-400 hover:text-red-500'
+                  : 'bg-red-500 border-red-600 text-white animate-pulse'
+                }`}
             >
-              {resetStep === 0 ? '重置' : '確定重置？'}
+              {resetStep === 0 ? '結束活動' : '確定結束？所有資料將清空'}
             </button>
             <button onClick={() => setShowImportModal(true)} className="bg-indigo-50 border-2 border-indigo-200 text-indigo-600 px-6 py-2 rounded-2xl font-black hover:bg-indigo-100 transition-all shadow-sm flex items-center gap-2">匯入球友</button>
             <button onClick={addCourt} className="bg-white border-2 border-indigo-600 text-indigo-600 px-6 py-2 rounded-2xl font-black hover:bg-indigo-600 hover:text-white transition-all shadow-sm">＋ 場地</button>
@@ -417,21 +524,21 @@ const App: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <div className="lg:col-span-3 flex flex-col gap-6 h-full min-h-[850px]">
             <AddPlayerForm onAdd={addPlayer} />
-            <PlayerList 
-              players={players} 
+            <PlayerList
+              players={players}
               courts={courts}
               matchQueue={matchQueue}
               history={history}
               playingPlayerIds={playingPlayerIds}
               queuedPlayerIds={queuedPlayerIds}
-              onDelete={deletePlayer} 
+              onDelete={deletePlayer}
               onUpdateLevel={updatePlayerLevel}
             />
           </div>
 
           <div className="lg:col-span-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             {courts.map(court => (
-              <CourtCard 
+              <CourtCard
                 key={court.id}
                 court={court}
                 allPlayers={players}
@@ -449,7 +556,7 @@ const App: React.FC = () => {
           </div>
 
           <div className="lg:col-span-3 flex flex-col gap-6 h-full min-h-[850px]">
-            <MatchQueue 
+            <MatchQueue
               queue={matchQueue}
               allPlayers={players}
               history={history}
