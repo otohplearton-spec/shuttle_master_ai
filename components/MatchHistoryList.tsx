@@ -1,0 +1,95 @@
+import React from 'react';
+import { MatchHistory, Player } from '../types';
+
+interface MatchHistoryListProps {
+    history: MatchHistory[];
+    allPlayers: Player[];
+    onClose: () => void;
+}
+
+const MatchHistoryList: React.FC<MatchHistoryListProps> = ({ history, allPlayers, onClose }) => {
+    const getPlayerName = (id: string, idx: number) => {
+        const player = allPlayers.find(p => p.id === id);
+        if (!player) return <span className="text-slate-400">?</span>;
+        return (
+            <span className="font-bold">
+                {player.name}
+                <span className="text-[10px] text-slate-400 font-normal ml-1">L.{player.level}</span>
+            </span>
+        );
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+                <div className="p-6 border-b flex items-center justify-between bg-slate-50">
+                    <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
+                        <span className="text-2xl">📜</span> 對戰歷史紀錄
+                    </h2>
+                    <button
+                        onClick={onClose}
+                        className="w-8 h-8 rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300 flex items-center justify-center transition-colors font-bold"
+                    >
+                        ✕
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+                    {history.length === 0 ? (
+                        <div className="text-center py-20 text-slate-400 italic">尚未有對戰紀錄</div>
+                    ) : (
+                        [...history].reverse().map((match, idx) => {
+                            const date = new Date(match.timestamp);
+                            const timeStr = date.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+
+                            // 計算隊伍強度
+                            const getLevel = (ids: string[]) => ids.reduce((sum, id) => sum + (allPlayers.find(p => p.id === id)?.level || 0), 0);
+                            const lv1 = getLevel(match.teams[0]);
+                            const lv2 = getLevel(match.teams[1]);
+                            const diff = Math.abs(lv1 - lv2);
+
+                            return (
+                                <div key={match.timestamp} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-lg">
+                                            #{history.length - idx} • {timeStr}
+                                        </span>
+                                        <span className={`text-xs font-bold px-2 py-1 rounded-lg ${diff <= 2 ? 'bg-emerald-50 text-emerald-600' : diff >= 5 ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'}`}>
+                                            強度差: {diff}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between gap-4">
+                                        {/* Team 1 */}
+                                        <div className="flex-1 bg-indigo-50/50 rounded-xl p-3 flex flex-col gap-2 border border-indigo-100">
+                                            {match.teams[0].map((pid, i) => (
+                                                <div key={i} className="flex items-center gap-2">
+                                                    <div className="w-2 h-2 rounded-full bg-indigo-400"></div>
+                                                    {getPlayerName(pid, i)}
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="font-black text-slate-300 italic text-xl">VS</div>
+
+                                        {/* Team 2 */}
+                                        <div className="flex-1 bg-amber-50/50 rounded-xl p-3 flex flex-col gap-2 border border-amber-100">
+                                            {match.teams[1].map((pid, i) => (
+                                                <div key={i} className="flex items-center gap-2">
+                                                    <div className="w-2 h-2 rounded-full bg-amber-400"></div>
+                                                    {getPlayerName(pid, i)}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default MatchHistoryList;

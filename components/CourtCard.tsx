@@ -16,7 +16,7 @@ interface CourtCardProps {
   onAssignNext: () => void;
 }
 
-const CourtCard: React.FC<CourtCardProps> = ({ 
+const CourtCard: React.FC<CourtCardProps> = ({
   court, allPlayers, busyPlayerIds, playingPlayerIds, onEndMatch, onSwapPlayer, onReplayBroadcast, onRemoveCourt, onUpdateName, matchQueueCount, onAssignNext
 }) => {
   const [swappingIdx, setSwappingIdx] = useState<number | null>(null);
@@ -46,28 +46,28 @@ const CourtCard: React.FC<CourtCardProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden flex flex-col h-[420px]">
-      <div className="bg-slate-800 p-4 text-white flex justify-between items-center group/header">
+    <div className="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden flex flex-col h-[380px] md:h-[420px]">
+      <div className="bg-slate-800 p-2 md:p-4 text-white flex justify-between items-center group/header">
         <div className="flex items-center gap-3 flex-1">
-          <div className="bg-indigo-500 p-2 rounded-lg flex-shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-7.535 5.503a1 1 0 101.07 1.683c.852-.54 2.117-.824 3.465-.824s2.613.284 3.465.824a1 1 0 001.07-1.683C14.306 13.05 12.585 12.5 10.5 12.5s-3.806.55-5.035 1.503z" clipRule="evenodd" /></svg>
+          <div className="bg-indigo-500 p-1.5 md:p-2 rounded-lg flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-7.535 5.503a1 1 0 101.07 1.683c.852-.54 2.117-.824 3.465-.824s2.613.284 3.465.824a1 1 0 001.07-1.683C14.306 13.05 12.585 12.5 10.5 12.5s-3.806.55-5.035 1.503z" clipRule="evenodd" /></svg>
           </div>
-          
+
           {isEditingName ? (
-            <input 
+            <input
               autoFocus
-              className="bg-slate-700 text-white font-bold text-xl px-2 py-0.5 rounded outline-none border-b-2 border-indigo-400 w-full"
+              className="bg-slate-700 text-white font-bold text-lg md:text-xl px-2 py-0.5 rounded outline-none border-b-2 border-indigo-400 w-full"
               value={tempName}
               onChange={(e) => setTempName(e.target.value)}
               onBlur={handleNameSubmit}
               onKeyDown={handleKeyDown}
             />
           ) : (
-            <div 
+            <div
               className="flex items-center gap-2 cursor-pointer hover:bg-slate-700 px-2 py-0.5 rounded transition-colors w-full overflow-hidden"
               onClick={() => { setIsEditingName(true); setTempName(court.name); }}
             >
-              <h3 className="text-xl font-bold truncate">{court.name}</h3>
+              <h3 className="text-sm md:text-xl font-bold truncate">{court.name}</h3>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 opacity-0 group-hover/header:opacity-50 transition-opacity" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
               </svg>
@@ -77,7 +77,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
         <button onClick={() => onRemoveCourt(court.id)} className="text-slate-400 hover:text-white transition-colors ml-2">✕</button>
       </div>
 
-      <div className="flex-1 bg-[#2e7d32] p-6 relative overflow-hidden flex flex-col">
+      <div className="flex-1 bg-[#2e7d32] p-2 md:p-6 relative overflow-hidden flex flex-col">
         <div className="absolute inset-4 border-2 border-white/30 pointer-events-none z-0">
           <div className="absolute top-1/2 left-0 w-full h-px bg-white/40 -translate-y-1/2"></div>
           <div className="absolute top-0 bottom-0 left-1/2 w-px bg-white/30 -translate-x-1/2"></div>
@@ -91,8 +91,8 @@ const CourtCard: React.FC<CourtCardProps> = ({
         )}
 
         {swappingIdx !== null && (
-          <div className="absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="bg-white w-full max-w-xs rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90%] border-4 border-indigo-500">
+          <div className="fixed inset-0 z-[60] bg-white md:bg-slate-900/60 md:backdrop-blur-sm md:flex md:items-center md:justify-center md:p-4 animate-in fade-in duration-200">
+            <div className="w-full h-full md:bg-white md:w-full md:max-w-md md:rounded-2xl md:shadow-2xl md:max-h-[90%] md:border-4 md:border-indigo-500 overflow-hidden flex flex-col">
               <div className="p-3 bg-slate-50 border-b flex justify-between items-center">
                 <span className="text-[10px] font-black text-slate-500 uppercase">更換球員</span>
                 <button onClick={() => setSwappingIdx(null)} className="text-slate-400 font-bold p-1">✕</button>
@@ -121,7 +121,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
                 目前閒置中
               </div>
               {matchQueueCount > 0 ? (
-                <button 
+                <button
                   onClick={onAssignNext}
                   className="bg-white text-emerald-700 px-6 py-3 rounded-2xl font-black shadow-2xl hover:bg-emerald-50 transition-all active:scale-95 flex items-center gap-2"
                 >
@@ -139,8 +139,9 @@ const CourtCard: React.FC<CourtCardProps> = ({
                 return (
                   <div key={idx} className="bg-white/95 rounded-xl p-2 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-indigo-50 transition-all shadow-lg" onClick={() => setSwappingIdx(idx)}>
                     <div className={`w-8 h-8 rounded-full mb-1 flex items-center justify-center font-black text-white text-xs ${p?.gender === Gender.FEMALE ? 'bg-pink-400' : 'bg-blue-400'}`}>{p?.name.charAt(0)}</div>
-                    <div className="font-bold text-slate-800 text-[10px] truncate w-full">{p?.name || '未知'}</div>
-                    <div className="text-[8px] text-slate-500 font-bold">LV.{p?.level} | {p?.gamesPlayed}場</div>
+                    <div className="font-bold text-slate-800 text-[10px] md:text-xs truncate w-full">{p?.name || '未知'}</div>
+                    <div className="text-[8px] md:text-[10px] text-slate-500 font-bold hidden md:block">LV.{p?.level} | {p?.gamesPlayed}場</div>
+                    <div className="text-[7px] text-slate-500 font-bold md:hidden">L{p?.level} {p?.gamesPlayed}場</div>
                   </div>
                 );
               })}
