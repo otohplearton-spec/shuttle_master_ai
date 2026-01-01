@@ -21,13 +21,18 @@ interface MatchQueueProps {
   onAutoAssignAll: () => void; // 新增一鍵指派
 }
 
-const MatchQueue: React.FC<MatchQueueProps> = ({ 
-  queue, allPlayers, history, busyPlayerIds, playingPlayerIds, 
+const MatchQueue: React.FC<MatchQueueProps> = ({
+  queue, allPlayers, history, busyPlayerIds, playingPlayerIds,
   onSchedule, onNormalSchedule, onAddBlankMatch, onManualSchedule, onRemove, onReorder, onSwapPlayer, isScheduling,
   availableCourts, onAssignToCourt, onAutoAssignAll
 }) => {
-  const [swappingIdx, setSwappingIdx] = useState<{qIdx: number, pIdx: number} | null>(null);
-  const [roundsToSchedule, setRoundsToSchedule] = useState(5);
+  const [swappingIdx, setSwappingIdx] = useState<{ qIdx: number, pIdx: number } | null>(null);
+  const calculateRounds = (count: number) => Math.max(1, Math.round((count * 6) / 4));
+  const [roundsToSchedule, setRoundsToSchedule] = useState(() => calculateRounds(allPlayers.length));
+
+  React.useEffect(() => {
+    setRoundsToSchedule(calculateRounds(allPlayers.length));
+  }, [allPlayers.length]);
   const [expandedMatchIdx, setExpandedMatchIdx] = useState<number | null>(null);
 
   const activeEditingId = swappingIdx ? queue[swappingIdx.qIdx][swappingIdx.pIdx] : null;
@@ -42,7 +47,7 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
 
   const handleStartSwap = (qIdx: number, pIdx: number) => {
     (window as any)._lastPIdx = pIdx;
-    setSwappingIdx({qIdx, pIdx});
+    setSwappingIdx({ qIdx, pIdx });
   };
 
   // 分析該場次的品質
@@ -54,11 +59,11 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
 
     // 檢查歷史重複
     const recent = history.slice(-15);
-    const partnerRepeat = recent.some(h => 
+    const partnerRepeat = recent.some(h =>
       (h.teams.some(t => t.includes(matchIds[0]) && t.includes(matchIds[1]))) ||
       (h.teams.some(t => t.includes(matchIds[2]) && t.includes(matchIds[3])))
     );
-    
+
     const opponentRepeat = recent.some(h => {
       const isOpp1 = (h.teams[0].includes(matchIds[0]) && h.teams[1].includes(matchIds[2])) || (h.teams[1].includes(matchIds[0]) && h.teams[0].includes(matchIds[2]));
       const isOpp2 = (h.teams[0].includes(matchIds[1]) && h.teams[1].includes(matchIds[3])) || (h.teams[1].includes(matchIds[1]) && h.teams[0].includes(matchIds[3]));
@@ -84,9 +89,9 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
 
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <input 
-              type="number" 
-              value={roundsToSchedule} 
+            <input
+              type="number"
+              value={roundsToSchedule}
               onChange={(e) => setRoundsToSchedule(Math.max(1, parseInt(e.target.value) || 1))}
               className="w-14 bg-white border border-slate-200 rounded-xl px-1 py-2 font-bold text-center text-indigo-600"
             />
@@ -111,11 +116,10 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
           <button
             onClick={onAutoAssignAll}
             disabled={!canAutoAssign}
-            className={`w-full py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 ${
-              canAutoAssign 
-              ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white hover:from-indigo-700 hover:to-blue-700' 
-              : 'bg-slate-100 text-slate-400 opacity-50 cursor-not-allowed'
-            }`}
+            className={`w-full py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 ${canAutoAssign
+                ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white hover:from-indigo-700 hover:to-blue-700'
+                : 'bg-slate-100 text-slate-400 opacity-50 cursor-not-allowed'
+              }`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
@@ -154,13 +158,13 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
                 const isInMatch = currentMatchIds.includes(p.id) && !isSelf;
                 if (isSelf) return null;
                 return (
-                  <button 
+                  <button
                     key={p.id}
                     onClick={() => { onSwapPlayer(swappingIdx.qIdx, activeEditingId || "", p.id); setSwappingIdx(null); }}
                     className={`w-full text-left p-3 rounded-xl border flex items-center justify-between hover:bg-indigo-600 hover:text-white transition-all ${isInMatch ? 'bg-indigo-50 border-indigo-200' : 'bg-white'}`}
                   >
                     <span className="font-bold text-sm">
-                      {p.name} 
+                      {p.name}
                       {playingPlayerIds.has(p.id) && <span className="text-[8px] bg-blue-100 text-blue-600 px-1 rounded ml-1">對戰中</span>}
                       {busyPlayerIds.has(p.id) && !playingPlayerIds.has(p.id) && <span className="text-[8px] bg-amber-100 text-amber-600 px-1 rounded ml-1">排隊中</span>}
                     </span>
@@ -184,7 +188,7 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">NEXT ROUND {qIdx + 1}</span>
-                    <button 
+                    <button
                       onClick={() => setExpandedMatchIdx(isExpanded ? null : qIdx)}
                       className={`text-[9px] px-2 py-0.5 rounded-full font-bold transition-all ${isExpanded ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500 hover:bg-indigo-100 hover:text-indigo-600'}`}
                     >
@@ -193,12 +197,12 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
                     {availableCourts.length > 0 && !isExpanded && (
                       <div className="flex gap-1">
                         {availableCourts.map(c => (
-                          <button 
+                          <button
                             key={c.id}
                             onClick={() => onAssignToCourt(c.id, qIdx)}
                             className="bg-emerald-100 text-emerald-700 text-[8px] font-black px-1.5 py-0.5 rounded hover:bg-emerald-600 hover:text-white transition-colors"
                           >
-                            至 {c.name.replace('場地 ','')}
+                            至 {c.name.replace('場地 ', '')}
                           </button>
                         ))}
                       </div>
@@ -220,33 +224,33 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
                       </div>
                       <div className="text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg">隊伍 B (LV: {analysis.lv2})</div>
                     </div>
-                    
+
                     <div className="flex items-center justify-around gap-2 text-xs">
-                       <div className="flex flex-col gap-1 flex-1">
-                          {[match[0], match[1]].map(id => {
-                            const p = allPlayers.find(x => x.id === id);
-                            return <div key={id} className="bg-slate-50 p-2 rounded-lg font-bold text-center truncate">{p?.name || '?'}</div>;
-                          })}
-                       </div>
-                       <div className="font-black text-slate-300 italic text-xl">VS</div>
-                       <div className="flex flex-col gap-1 flex-1">
-                          {[match[2], match[3]].map(id => {
-                            const p = allPlayers.find(x => x.id === id);
-                            return <div key={id} className="bg-slate-50 p-2 rounded-lg font-bold text-center truncate">{p?.name || '?'}</div>;
-                          })}
-                       </div>
+                      <div className="flex flex-col gap-1 flex-1">
+                        {[match[0], match[1]].map(id => {
+                          const p = allPlayers.find(x => x.id === id);
+                          return <div key={id} className="bg-slate-50 p-2 rounded-lg font-bold text-center truncate">{p?.name || '?'}</div>;
+                        })}
+                      </div>
+                      <div className="font-black text-slate-300 italic text-xl">VS</div>
+                      <div className="flex flex-col gap-1 flex-1">
+                        {[match[2], match[3]].map(id => {
+                          const p = allPlayers.find(x => x.id === id);
+                          return <div key={id} className="bg-slate-50 p-2 rounded-lg font-bold text-center truncate">{p?.name || '?'}</div>;
+                        })}
+                      </div>
                     </div>
 
                     <div className="pt-2 border-t border-slate-100 flex gap-2">
-                       {analysis.partnerRepeat && <span className="text-[9px] bg-red-100 text-red-600 px-2 py-0.5 rounded font-black">搭檔重複過</span>}
-                       {analysis.opponentRepeat && <span className="text-[9px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded font-black">對戰重複過</span>}
-                       {!analysis.partnerRepeat && !analysis.opponentRepeat && <span className="text-[9px] bg-green-100 text-green-600 px-2 py-0.5 rounded font-black">全新組合 ✨</span>}
+                      {analysis.partnerRepeat && <span className="text-[9px] bg-red-100 text-red-600 px-2 py-0.5 rounded font-black">搭檔重複過</span>}
+                      {analysis.opponentRepeat && <span className="text-[9px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded font-black">對戰重複過</span>}
+                      {!analysis.partnerRepeat && !analysis.opponentRepeat && <span className="text-[9px] bg-green-100 text-green-600 px-2 py-0.5 rounded font-black">全新組合 ✨</span>}
                     </div>
 
                     {availableCourts.length > 0 && (
                       <div className="pt-1 flex gap-2">
                         {availableCourts.map(c => (
-                          <button 
+                          <button
                             key={c.id}
                             onClick={() => onAssignToCourt(c.id, qIdx)}
                             className="flex-1 bg-emerald-600 text-white text-[10px] font-black py-2 rounded-lg hover:bg-emerald-700 shadow-sm"
@@ -264,9 +268,9 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
                     const p = allPlayers.find(x => x.id === pid);
                     if (!pid) {
                       return (
-                        <div 
-                          key={pIdx} 
-                          onClick={() => handleStartSwap(qIdx, pIdx)} 
+                        <div
+                          key={pIdx}
+                          onClick={() => handleStartSwap(qIdx, pIdx)}
                           className="bg-white border-2 border-dashed border-slate-200 p-2 rounded-xl cursor-pointer hover:border-indigo-400 transition-colors flex items-center gap-2 group/item"
                         >
                           <div className="w-6 h-6 rounded-full border-2 border-slate-100 flex-shrink-0 flex items-center justify-center text-[10px] text-slate-300 group-hover/item:text-indigo-400">?</div>

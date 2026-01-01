@@ -283,11 +283,18 @@ const App: React.FC = () => {
    */
   // ... (keep generateSmartRound exactly as is, but it's inside component, so we just use the existing one)
   const generateSmartRound = (currentPlayers: Player[], currentHistory: MatchHistory[], queueSoFar: string[][]): string[] | null => {
-    const available = currentPlayers.filter(p => !playingPlayerIds.has(p.id));
+    // 智慧排點不再排除正在場上的球員，而是將他們一併納入考量
+    // 但會透過 projectedGames 增加場次權重，避免他們如果正在打，還被排在很前面
+    const available = currentPlayers;
     if (available.length < 4) return null;
 
     const projectedGames = new Map<string, number>();
-    currentPlayers.forEach(p => projectedGames.set(p.id, p.gamesPlayed));
+    currentPlayers.forEach(p => {
+      // 如果正在場上，視為已經打完這場 (+1)，避免優先級過高
+      // 如果還在隊列中，下面會再加
+      const baseGames = p.gamesPlayed + (playingPlayerIds.has(p.id) ? 1 : 0);
+      projectedGames.set(p.id, baseGames);
+    });
     queueSoFar.forEach(match => {
       match.forEach(id => {
         if (id && projectedGames.has(id)) {
@@ -506,8 +513,8 @@ const App: React.FC = () => {
             <button
               onClick={handleEndSession}
               className={`px-4 py-2 rounded-2xl font-black transition-all shadow-sm text-sm border-2 ${resetStep === 0
-                  ? 'bg-white border-slate-200 text-slate-400 hover:border-red-400 hover:text-red-500'
-                  : 'bg-red-500 border-red-600 text-white animate-pulse'
+                ? 'bg-white border-slate-200 text-slate-400 hover:border-red-400 hover:text-red-500'
+                : 'bg-red-500 border-red-600 text-white animate-pulse'
                 }`}
             >
               {resetStep === 0 ? '結束活動' : '確定結束？所有資料將清空'}
