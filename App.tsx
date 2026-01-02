@@ -24,20 +24,100 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : null;
   });
 
-  // Init LIFF
+  // --- LIFF & Login Logic ---
+  const [inPopupMode, setInPopupMode] = useState(false);
+
   useEffect(() => {
     const initLiff = async () => {
-      const isLoggedIn = await lineService.init();
-      if (isLoggedIn && !currentUser) {
-        const profile = await lineService.getProfile();
-        if (profile) {
-          setCurrentUser(profile);
-          localStorage.setItem('shuttle_master_user', JSON.stringify(profile));
+      // Check if we are in "Popup Callback Mode"
+      const params = new URLSearchParams(window.location.search);
+      const isPopupMode = params.get('liff.state') || window.location.search.includes('line_login_check');
+
+      if (isPopupMode) {
+        setInPopupMode(true);
+      }
+
+      try {
+        const isLoggedIn = await lineService.init();
+
+        // 1. Popup Logic
+        if (isPopupMode) {
+          if (isLoggedIn) {
+            // Success! Send back to opener
+            const profile = await lineService.getProfile();
+            if (window.opener) {
+              window.opener.postMessage({ type: 'LINE_LOGIN_SUCCESS', user: profile }, window.location.origin);
+              window.close();
+            }
+          } else {
+            // Not logged in yet? Redirect to LINE Login immediately inside the popup
+            lineService.login();
+          }
+          return;
         }
+
+        // 2. Main App Logic
+        if (isLoggedIn) {
+          const profile = await lineService.getProfile(); // Fetch actual profile from LIFF
+          if (profile) {
+            setCurrentUser(profile);
+            localStorage.setItem('shuttle_master_user', JSON.stringify(profile));
+            // Sync with current players
+            setPlayers(prev => {
+              if (!prev.some(p => p.id === profile.userId)) {
+                return [...prev, {
+                  id: profile.userId,
+                  name: profile.displayName,
+                  level: 5,
+                  gender: Gender.MALE, // Default
+                  gamesPlayed: 0
+                }];
+              }
+              return prev;
+            });
+          }
+        }
+      } catch (error) {
+        console.error("LIFF Init Error:", error);
+        if (isPopupMode) window.close(); // Close if error in popup
       }
     };
     initLiff();
-  }, []); // Run once on mount
+
+    // Listener for PWA (Main Window) to receive login data from popup
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === 'LINE_LOGIN_SUCCESS' && event.data?.user) {
+        const profile = event.data.user;
+        setCurrentUser(profile);
+        localStorage.setItem('shuttle_master_user', JSON.stringify(profile));
+        setPlayers(prev => {
+          if (!prev.some(p => p.id === profile.userId)) {
+            return [...prev, {
+              id: profile.userId,
+              name: profile.displayName,
+              level: 5,
+              gender: Gender.MALE,
+              gamesPlayed: 0
+            }];
+          }
+          return prev;
+        });
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  // If in popup mode, just render a loading screen to avoid double app logic
+  if (inPopupMode) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
+        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-slate-500 font-bold">Connecting to LINE...</p>
+      </div>
+    );
+  }
 
   const [players, setPlayers] = useState<Player[]>(() => {
     const saved = localStorage.getItem('shuttle_players');
