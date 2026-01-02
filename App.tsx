@@ -7,6 +7,7 @@ import CourtCard from './components/CourtCard';
 import MatchQueue from './components/MatchQueue';
 import MatchHistoryList from './components/MatchHistoryList';
 import QuickImportModal from './components/QuickImportModal';
+import ScoreInputModal from './components/ScoreInputModal';
 import { geminiService } from './services/geminiService';
 
 const App: React.FC = () => {
@@ -51,6 +52,13 @@ const App: React.FC = () => {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [resetStep, setResetStep] = useState(0);
 
+  // 計分功能狀態
+  const [isScoreEnabled, setIsScoreEnabled] = useState(() => {
+    const saved = localStorage.getItem('isScoreEnabled');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+  const [endingCourtId, setEndingCourtId] = useState<string | null>(null);
+
   // 自動廣播開關狀態
   const [isAutoBroadcastEnabled, setIsAutoBroadcastEnabled] = useState(() => {
     const saved = localStorage.getItem('isAutoBroadcastEnabled');
@@ -62,6 +70,10 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('shuttle_session_active', String(isSessionActive));
   }, [isSessionActive]);
+
+  useEffect(() => {
+    localStorage.setItem('isScoreEnabled', JSON.stringify(isScoreEnabled));
+  }, [isScoreEnabled]);
 
   useEffect(() => {
     if (isSessionActive) {
@@ -153,9 +165,6 @@ const App: React.FC = () => {
     }
   };
 
-  // Deprecated: Old handleReset replaced by handleEndSession
-  // keeping logic just in case, but mapped to End Session button
-
   const addPlayer = (newPlayer: Omit<Player, 'id' | 'gamesPlayed'>) => {
     const player: Player = { ...newPlayer, id: crypto.randomUUID(), gamesPlayed: 0 };
     setPlayers(prev => [...prev, player]);
@@ -209,6 +218,14 @@ const App: React.FC = () => {
   };
 
   const endMatch = (courtId: string) => {
+    if (isScoreEnabled) {
+      setEndingCourtId(courtId);
+    } else {
+      finalizeMatch(courtId);
+    }
+  };
+
+  const finalizeMatch = (courtId: string, score?: [number, number]) => {
     const court = courts.find(c => c.id === courtId);
     if (!court) return;
 
@@ -222,7 +239,8 @@ const App: React.FC = () => {
         timestamp: endTime,
         players: [...court.players],
         teams: [[court.players[0], court.players[1]], [court.players[2], court.players[3]]],
-        duration: durationSeconds
+        duration: durationSeconds,
+        score: score
       };
       setHistory(prev => [...prev, currentMatch]);
       setPlayers(prev => prev.map(p => court.players.includes(p.id) ? { ...p, gamesPlayed: p.gamesPlayed + 1 } : p));
@@ -230,6 +248,7 @@ const App: React.FC = () => {
     }
 
     setCourts(prev => prev.map(c => c.id === courtId ? { ...c, players: [], isActive: false } : c));
+    setEndingCourtId(null);
   };
 
   const assignMatchToCourt = (courtId: string, queueIndex: number = 0) => {
@@ -499,6 +518,27 @@ const App: React.FC = () => {
             <p className="text-slate-400 font-bold tracking-widest text-xs uppercase">Centralized Smart Queue System</p>
           </div>
           <div className="flex flex-wrap items-center gap-4">
+            {/* 計分模式開關 */}
+            <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:border-amber-200">
+              <div className={`p-1.5 rounded-lg transition-colors ${isScoreEnabled ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-400'}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-7.535 5.503a1 1 0 101.07 1.683c.852-.54 2.117-.824 3.465-.824s2.613.284 3.465.824a1 1 0 001.07-1.683C14.306 13.05 12.585 12.5 10.5 12.5s-3.806.55-5.035 1.503z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black text-slate-400 leading-none mb-0.5">計分模式</span>
+                <span className={`text-[11px] font-bold leading-none ${isScoreEnabled ? 'text-amber-600' : 'text-slate-500'}`}>
+                  {isScoreEnabled ? '已開啟' : '已關閉'}
+                </span>
+              </div>
+              <button
+                onClick={() => setIsScoreEnabled(!isScoreEnabled)}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isScoreEnabled ? 'bg-amber-500' : 'bg-slate-200'}`}
+              >
+                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isScoreEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+              </button>
+            </div>
+
             {/* 語音廣播開關 */}
             <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:border-indigo-200">
               <div className={`p-1.5 rounded-lg transition-colors ${isAutoBroadcastEnabled ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}>
@@ -639,6 +679,16 @@ const App: React.FC = () => {
           history={history}
           allPlayers={players}
           onClose={() => setShowHistoryModal(false)}
+        />
+      )}
+
+      {endingCourtId && (
+        <ScoreInputModal
+          ids={courts.find(c => c.id === endingCourtId)?.players || []}
+          allPlayers={players}
+          onConfirm={(score) => finalizeMatch(endingCourtId, score)}
+          onCancel={() => setEndingCourtId(null)}
+          onSkip={() => finalizeMatch(endingCourtId)}
         />
       )}
 

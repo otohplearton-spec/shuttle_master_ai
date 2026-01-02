@@ -60,14 +60,23 @@ const MatchHistoryList: React.FC<MatchHistoryListProps> = ({ history, allPlayers
                                                 </span>
                                             )}
                                         </span>
-                                        <span className={`text-xs font-bold px-2 py-1 rounded-lg ${diff <= 2 ? 'bg-emerald-50 text-emerald-600' : diff >= 5 ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'}`}>
-                                            強度差: {diff}
-                                        </span>
+                                        <div className="flex gap-2">
+                                            <span className={`text-xs font-bold px-2 py-1 rounded-lg ${diff <= 2 ? 'bg-emerald-50 text-emerald-600' : diff >= 5 ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'}`}>
+                                                強度差: {diff}
+                                            </span>
+                                            {match.score && (
+                                                <span className="text-xs font-black px-2 py-1 rounded-lg bg-slate-800 text-white shadow-sm flex items-center gap-1">
+                                                    <span>🏆</span>
+                                                    <span>{match.score[0]} : {match.score[1]}</span>
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="flex items-center justify-between gap-4">
                                         {/* Team 1 */}
-                                        <div className="flex-1 bg-indigo-50/50 rounded-xl p-3 flex flex-col gap-2 border border-indigo-100">
+                                        <div className={`flex-1 rounded-xl p-3 flex flex-col gap-2 border transition-all ${match.score && match.score[0] > match.score[1] ? 'bg-yellow-50 border-yellow-300 ring-2 ring-yellow-200 shadow-md scale-[1.02]' : 'bg-indigo-50/50 border-indigo-100 opacity-80'}`}>
+                                            {match.score && match.score[0] > match.score[1] && <div className="text-[10px] font-black text-yellow-600 uppercase text-center mb-1">WINNER 👑</div>}
                                             {match.teams[0].map((pid, i) => (
                                                 <div key={i} className="flex items-center gap-2">
                                                     <div className="w-2 h-2 rounded-full bg-indigo-400"></div>
@@ -79,7 +88,8 @@ const MatchHistoryList: React.FC<MatchHistoryListProps> = ({ history, allPlayers
                                         <div className="font-black text-slate-300 italic text-xl">VS</div>
 
                                         {/* Team 2 */}
-                                        <div className="flex-1 bg-amber-50/50 rounded-xl p-3 flex flex-col gap-2 border border-amber-100">
+                                        <div className={`flex-1 rounded-xl p-3 flex flex-col gap-2 border transition-all ${match.score && match.score[1] > match.score[0] ? 'bg-yellow-50 border-yellow-300 ring-2 ring-yellow-200 shadow-md scale-[1.02]' : 'bg-amber-50/50 border-amber-100 opacity-80'}`}>
+                                            {match.score && match.score[1] > match.score[0] && <div className="text-[10px] font-black text-yellow-600 uppercase text-center mb-1">WINNER 👑</div>}
                                             {match.teams[1].map((pid, i) => (
                                                 <div key={i} className="flex items-center gap-2">
                                                     <div className="w-2 h-2 rounded-full bg-amber-400"></div>
