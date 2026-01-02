@@ -30,4 +30,5 @@ export interface MatchHistory {
   timestamp: number;
   players: string[]; // All 4 participants
   teams: [string[], string[]];
+  duration?: number; // Match duration in seconds
 }

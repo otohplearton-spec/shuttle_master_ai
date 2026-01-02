@@ -51,8 +51,14 @@ const MatchHistoryList: React.FC<MatchHistoryListProps> = ({ history, allPlayers
                             return (
                                 <div key={match.timestamp} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
                                     <div className="flex items-center justify-between mb-3">
-                                        <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-lg">
-                                            #{history.length - idx} • {timeStr}
+                                        <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-lg flex items-center gap-2">
+                                            <span>#{history.length - idx} • {timeStr}</span>
+                                            {match.duration && (
+                                                <span className="text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 flex items-center gap-1">
+                                                    <span>⏱</span>
+                                                    <span>{Math.floor(match.duration / 60)}m {match.duration % 60}s</span>
+                                                </span>
+                                            )}
                                         </span>
                                         <span className={`text-xs font-bold px-2 py-1 rounded-lg ${diff <= 2 ? 'bg-emerald-50 text-emerald-600' : diff >= 5 ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'}`}>
                                             強度差: {diff}

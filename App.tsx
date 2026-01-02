@@ -214,10 +214,15 @@ const App: React.FC = () => {
 
     const validPlayers = court.players.filter(id => id !== "");
     if (validPlayers.length === 4) {
+      const startTime = court.startTime || Date.now();
+      const endTime = Date.now();
+      const durationSeconds = Math.round((endTime - startTime) / 1000);
+
       const currentMatch: MatchHistory = {
-        timestamp: Date.now(),
+        timestamp: endTime,
         players: [...court.players],
-        teams: [[court.players[0], court.players[1]], [court.players[2], court.players[3]]]
+        teams: [[court.players[0], court.players[1]], [court.players[2], court.players[3]]],
+        duration: durationSeconds
       };
       setHistory(prev => [...prev, currentMatch]);
       setPlayers(prev => prev.map(p => court.players.includes(p.id) ? { ...p, gamesPlayed: p.gamesPlayed + 1 } : p));
