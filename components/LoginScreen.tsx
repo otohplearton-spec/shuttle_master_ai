@@ -93,12 +93,36 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                         <p className="text-[10px] text-slate-400 text-center mt-4">
                             By logging in, you agree to our Terms of Service <br /> and Privacy Policy.
                         </p>
+
+                        {/* iOS PWA Fallback */}
+                        <div className="mt-8 border-t border-slate-100 pt-6">
+                            <button
+                                onClick={() => {
+                                    const key = prompt('請貼上「登入金鑰」 (JSON格式)');
+                                    if (key) {
+                                        try {
+                                            const user = JSON.parse(key);
+                                            if (user && user.userId) {
+                                                onLogin(user);
+                                            } else {
+                                                alert('金鑰格式錯誤');
+                                            }
+                                        } catch (e) {
+                                            alert('無效的金鑰');
+                                        }
+                                    }
+                                }}
+                                className="text-slate-400 text-xs font-bold underline hover:text-indigo-600 transition-colors w-full text-center"
+                            >
+                                iOS PWA 無法自動返回？點此手動登入
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 {/* Footer info */}
                 <div className="bg-slate-50 p-4 border-t border-slate-100 text-center">
-                    <p className="text-[10px] text-slate-400">Version 1.2.0 • Pro Features Coming Soon</p>
+                    <p className="text-[10px] text-slate-400">Version 1.2.1 • Smart Scheduler</p>
                 </div>
             </div>
         </div>
