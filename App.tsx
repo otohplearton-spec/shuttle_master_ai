@@ -51,7 +51,8 @@ const App: React.FC = () => {
             }
           } else {
             // Not logged in yet? Redirect to LINE Login immediately inside the popup
-            lineService.login();
+            // IMPORTANT: Pass current href (with ?line_login_check=true) so we come back to Popup Mode!
+            lineService.login(window.location.href);
           }
           return;
         }

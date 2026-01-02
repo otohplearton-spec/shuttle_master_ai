@@ -27,11 +27,14 @@ export const lineService = {
      * Trigger LINE Login
      * This will redirect the user to the LINE Login screen
      */
-    login: () => {
+    /**
+     * Trigger LINE Login
+     * This will redirect the user to the LINE Login screen
+     * @param redirectUri Optional custom redirect URI (default: window.location.origin)
+     */
+    login: (redirectUri?: string) => {
         if (!liff.isLoggedIn()) {
-            // Explicitly redirect back to the current origin (e.g., http://localhost:3000)
-            // This URL MUST be added to LINE Developer Console -> LINE Login -> Callback URL
-            liff.login({ redirectUri: window.location.origin });
+            liff.login({ redirectUri: redirectUri || window.location.origin });
         }
     },
 
