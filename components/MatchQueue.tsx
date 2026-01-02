@@ -75,6 +75,12 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
 
   const canAutoAssign = availableCourts.length > 0 && queue.length > 0;
 
+  const handleNormalSchedule = () => {
+    if (window.confirm('確定要執行普通智慧排點嗎？')) {
+      onNormalSchedule(roundsToSchedule);
+    }
+  };
+
   return (
     <div className="bg-white rounded-3xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
       <div className="p-6 border-b bg-slate-50">
@@ -97,7 +103,7 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
             />
             <div className="flex-1 flex gap-2">
               <button
-                onClick={() => onNormalSchedule(roundsToSchedule)}
+                onClick={handleNormalSchedule}
                 disabled={isScheduling || allPlayers.length < 4}
                 className="flex-1 bg-white border-2 border-indigo-600 text-indigo-600 py-2 rounded-xl font-black text-xs hover:bg-indigo-50 transition-all disabled:opacity-50"
               >
@@ -117,8 +123,8 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
             onClick={onAutoAssignAll}
             disabled={!canAutoAssign}
             className={`w-full py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 ${canAutoAssign
-                ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white hover:from-indigo-700 hover:to-blue-700'
-                : 'bg-slate-100 text-slate-400 opacity-50 cursor-not-allowed'
+              ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white hover:from-indigo-700 hover:to-blue-700'
+              : 'bg-slate-100 text-slate-400 opacity-50 cursor-not-allowed'
               }`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
