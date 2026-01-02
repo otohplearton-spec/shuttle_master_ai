@@ -13,15 +13,15 @@ interface PlayerListProps {
   onUpdateLevel: (id: string, newLevel: number) => void;
 }
 
-const PlayerList: React.FC<PlayerListProps> = ({ 
-  players, 
-  courts, 
-  matchQueue, 
-  history, 
-  playingPlayerIds, 
-  queuedPlayerIds, 
-  onDelete, 
-  onUpdateLevel 
+const PlayerList: React.FC<PlayerListProps> = ({
+  players,
+  courts,
+  matchQueue,
+  history,
+  playingPlayerIds,
+  queuedPlayerIds,
+  onDelete,
+  onUpdateLevel
 }) => {
   const [selectedPlayerHistory, setSelectedPlayerHistory] = useState<string | null>(null);
 
@@ -54,7 +54,7 @@ const PlayerList: React.FC<PlayerListProps> = ({
       otherTeam?.forEach(p => { opponents.set(p, (opponents.get(p) || 0) + 1); });
     });
 
-    return { 
+    return {
       partners: Array.from(partners.entries()).sort((a, b) => b[1] - a[1]),
       opponents: Array.from(opponents.entries()).sort((a, b) => b[1] - a[1])
     };
@@ -71,7 +71,7 @@ const PlayerList: React.FC<PlayerListProps> = ({
         const pIds = c.players;
         const myTeamIdx = pIds.indexOf(playerId) < 2 ? [0, 1] : [2, 3];
         const otherTeamIdx = pIds.indexOf(playerId) < 2 ? [2, 3] : [0, 1];
-        
+
         myTeamIdx.forEach(idx => {
           if (pIds[idx] !== playerId && pIds[idx]) partners.set(pIds[idx], (partners.get(pIds[idx]) || 0) + 1);
         });
@@ -129,6 +129,24 @@ const PlayerList: React.FC<PlayerListProps> = ({
           const totalAssignedCount = getQueuedCount(player.id);
           const totalGames = player.gamesPlayed + totalAssignedCount;
 
+          // 獲取「下一場」搭檔與對手
+          const getNextMatch = (playerId: string) => {
+            const nextMatch = matchQueue.find(m => m.includes(playerId));
+            if (!nextMatch) return null;
+
+            const pIdx = nextMatch.indexOf(playerId);
+            const isTeam1 = pIdx < 2;
+            const partnerId = isTeam1 ? nextMatch[pIdx === 0 ? 1 : 0] : nextMatch[pIdx === 2 ? 3 : 2];
+            const opponentIds = isTeam1 ? [nextMatch[2], nextMatch[3]] : [nextMatch[0], nextMatch[1]];
+
+            return {
+              partner: players.find(p => p.id === partnerId),
+              opponents: opponentIds.map(id => players.find(p => p.id === id))
+            };
+          };
+
+          const nextMatchInfo = getNextMatch(player.id);
+
           return (
             <div key={player.id} className={`flex flex-col p-4 rounded-xl border transition-all ${isPlaying ? 'bg-blue-50 border-blue-200 shadow-sm' : isQueued ? 'bg-amber-50 border-amber-200 shadow-sm' : 'bg-white border-slate-100'}`}>
               <div className="flex items-center justify-between mb-2">
@@ -182,16 +200,40 @@ const PlayerList: React.FC<PlayerListProps> = ({
 
                 {totalAssignedCount > 0 && (
                   <div className="flex gap-1 mt-1 justify-end">
-                     {Array.from({length: totalAssignedCount}).map((_, i) => (
-                       <div key={i} className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></div>
-                     ))}
+                    {Array.from({ length: totalAssignedCount }).map((_, i) => (
+                      <div key={i} className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></div>
+                    ))}
                   </div>
                 )}
               </div>
 
               {selectedPlayerHistory === player.id && (
                 <div className="mt-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
-                  {/* 即將對戰 (預計) */}
+                  {/* 下一場對戰詳情 */}
+                  {nextMatchInfo && (
+                    <div className="p-3 bg-indigo-50/50 rounded-xl border border-indigo-200">
+                      <h4 className="text-[10px] font-black text-indigo-700 uppercase mb-2 flex items-center gap-1">
+                        <span className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce"></span>
+                        即將上場 (Next Match)
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="text-[9px] font-bold text-indigo-600/70 block mb-1">搭檔</span>
+                          <div className="text-[10px] font-bold text-slate-700">
+                            {nextMatchInfo.partner?.name || <span className="text-slate-400 italic">空缺</span>}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-[9px] font-bold text-indigo-600/70 block mb-1">對手</span>
+                          <div className="text-[10px] font-bold text-slate-700">
+                            {nextMatchInfo.opponents.map(p => p?.name).filter(Boolean).join(' & ') || <span className="text-slate-400 italic">空缺</span>}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 預計對戰 (累積統計) */}
                   {totalAssignedCount > 0 && (
                     <div className="p-3 bg-amber-50/50 rounded-xl border border-amber-200">
                       <h4 className="text-[10px] font-black text-amber-700 uppercase mb-2 flex items-center gap-1">
