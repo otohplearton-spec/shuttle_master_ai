@@ -33,3 +33,10 @@ export interface MatchHistory {
   duration?: number; // Match duration in seconds
   score?: [number, number]; // [team1Score, team2Score]
 }
+
+export interface UserProfile {
+  userId: string;
+  displayName: string;
+  pictureUrl?: string; // Optional URL for profile picture
+  isPro: boolean;
+}

@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Player, Gender, Court, MatchHistory } from './types';
+import { Player, Gender, Court, MatchHistory, UserProfile } from './types';
 import AddPlayerForm from './components/AddPlayerForm';
 import PlayerList from './components/PlayerList';
 import CourtCard from './components/CourtCard';
@@ -8,6 +8,8 @@ import MatchQueue from './components/MatchQueue';
 import MatchHistoryList from './components/MatchHistoryList';
 import QuickImportModal from './components/QuickImportModal';
 import ScoreInputModal from './components/ScoreInputModal';
+import LoginScreen from './components/LoginScreen';
+import { lineService } from './services/lineService';
 import { geminiService } from './services/geminiService';
 
 const App: React.FC = () => {
@@ -16,6 +18,26 @@ const App: React.FC = () => {
   const [isSessionActive, setIsSessionActive] = useState(() => {
     return localStorage.getItem('shuttle_session_active') === 'true';
   });
+
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
+    const saved = localStorage.getItem('shuttle_master_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  // Init LIFF
+  useEffect(() => {
+    const initLiff = async () => {
+      const isLoggedIn = await lineService.init();
+      if (isLoggedIn && !currentUser) {
+        const profile = await lineService.getProfile();
+        if (profile) {
+          setCurrentUser(profile);
+          localStorage.setItem('shuttle_master_user', JSON.stringify(profile));
+        }
+      }
+    };
+    initLiff();
+  }, []); // Run once on mount
 
   const [players, setPlayers] = useState<Player[]>(() => {
     const saved = localStorage.getItem('shuttle_players');
@@ -65,6 +87,20 @@ const App: React.FC = () => {
     return saved !== null ? JSON.parse(saved) : true;
   });
 
+  const handleLogin = (user: UserProfile) => {
+    setCurrentUser(user);
+    localStorage.setItem('shuttle_master_user', JSON.stringify(user));
+  };
+
+  const handleLogout = () => {
+    if (window.confirm('確定要登出嗎？')) {
+      lineService.logout(); // LIFF Logout
+      setCurrentUser(null);
+      localStorage.removeItem('shuttle_master_user');
+      window.location.reload(); // Reload to reset LIFF state/ensure clean slate
+    }
+  };
+
   // --- Persistence Effects ---
 
   useEffect(() => {
@@ -98,6 +134,11 @@ const App: React.FC = () => {
       localStorage.setItem('shuttle_history', JSON.stringify(history));
     }
   }, [history, isSessionActive]);
+
+
+
+  // Helper functions
+  const getPlayer = (id: string) => players.find(p => p.id === id);
 
   useEffect(() => {
     if (isSessionActive) {
@@ -482,10 +523,28 @@ const App: React.FC = () => {
     }));
   };
 
+  if (!currentUser) {
+    return <LoginScreen onLogin={handleLogin} />;
+  }
+
   if (!isSessionActive) {
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
         <div className="text-center space-y-8 max-w-lg">
+          <div className="flex flex-col items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {currentUser.pictureUrl ? (
+              <img src={currentUser.pictureUrl} alt={currentUser.displayName} className="w-20 h-20 rounded-full border-4 border-white shadow-lg" />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-indigo-500 flex items-center justify-center text-3xl text-white font-bold shadow-lg">
+                {currentUser.displayName.charAt(0)}
+              </div>
+            )}
+            <div className="text-center">
+              <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mb-1">WELCOME BACK</p>
+              <h2 className="text-2xl font-black text-white">{currentUser.displayName}</h2>
+            </div>
+          </div>
+
           <h1 className="text-6xl font-black bg-gradient-to-br from-indigo-400 to-purple-500 bg-clip-text text-transparent italic tracking-tighter">
             SHUTTLE MASTER AI
           </h1>
@@ -511,11 +570,25 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-slate-100 text-slate-900 p-4 md:p-8 flex flex-col items-center">
       <div className="w-full max-w-[1700px]">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-4xl font-black bg-gradient-to-br from-indigo-600 to-blue-500 bg-clip-text text-transparent italic tracking-tighter">
-              SHUTTLE MASTER AI
-            </h1>
-            <p className="text-slate-400 font-bold tracking-widest text-xs uppercase">Centralized Smart Queue System</p>
+          <div className="flex items-center gap-4">
+            {/* Use Avatar */}
+            {currentUser.pictureUrl ? (
+              <img src={currentUser.pictureUrl} alt={currentUser.displayName} className="w-12 h-12 rounded-full border-2 border-white shadow-md hidden md:block" />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-indigo-500 hidden md:flex items-center justify-center text-xl text-white font-bold shadow-md">
+                {currentUser.displayName.charAt(0)}
+              </div>
+            )}
+            <div>
+              <h1 className="text-4xl font-black bg-gradient-to-br from-indigo-600 to-blue-500 bg-clip-text text-transparent italic tracking-tighter">
+                SHUTTLE MASTER AI
+              </h1>
+              <div className="flex items-center gap-2">
+                <p className="text-slate-400 font-bold tracking-widest text-xs uppercase">Centralized Smart Queue System</p>
+                <span className="hidden md:inline-block w-1 h-1 bg-slate-300 rounded-full"></span>
+                <p className="hidden md:block text-slate-500 text-xs font-bold">Hi, {currentUser.displayName}</p>
+              </div>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-4">
             {/* 計分模式開關 */}
@@ -567,6 +640,16 @@ const App: React.FC = () => {
               className="lg:hidden px-4 py-2 rounded-2xl font-bold bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all text-sm flex items-center gap-2"
             >
               👥 球員
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1 bg-white px-3 py-1.5 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:bg-red-50 hover:border-red-200 text-slate-400 hover:text-red-500"
+              title="登出"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
             </button>
 
             <button
