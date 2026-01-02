@@ -508,43 +508,152 @@ const App: React.FC = () => {
   };
 
   const swapQueuePlayer = (qIdx: number, oldId: string, newId: string) => {
+    // Advanced Swap: Check for duplicates in other rounds
+    const existingIndices: number[] = [];
+    matchQueue.forEach((m, idx) => {
+      if (idx !== qIdx && m.includes(newId)) {
+        existingIndices.push(idx + 1);
+      }
+    });
+
+    let targetSwapIdx = -1;
+
+    if (existingIndices.length > 0) {
+      const roundsStr = existingIndices.map(i => `Round ${i}`).join(', ');
+      const choice = window.prompt(
+        `球員已排在 ${roundsStr}。\n\n` +
+        `1. 輸入場次號碼 (如 ${existingIndices[0]}) 進行「交換位置」\n` +
+        `2. 留空並按確定，進行「直接替換」(可能導致重複)\n` +
+        `3. 按取消由不執行`
+      );
+
+      if (choice === null) return; // Cancelled
+
+      if (choice.trim() !== "") {
+        const parsed = parseInt(choice);
+        if (existingIndices.includes(parsed)) {
+          targetSwapIdx = parsed - 1;
+        } else {
+          alert("輸入的場次錯誤，操作已取消。");
+          return;
+        }
+      }
+    }
+
     setMatchQueue(prev => {
       const next = [...prev];
       const round = [...next[qIdx]];
       let targetPos = -1;
+
+      // Determine position of oldId (or blank) in current match
       if (oldId === "") {
         targetPos = round.findIndex((id, idx) => id === "" && idx === (window as any)._lastPIdx);
         if (targetPos === -1) targetPos = round.indexOf("");
       } else {
         targetPos = round.indexOf(oldId);
       }
+
       if (targetPos === -1) return prev;
+
+      // Check if newId is already IN THE SAME ROUND
       const existingIdx = round.indexOf(newId);
       if (existingIdx !== -1) {
+        // Swap within same round
         round[existingIdx] = oldId;
         round[targetPos] = newId;
+        next[qIdx] = round;
+      } else if (targetSwapIdx !== -1) {
+        // Swap WITH another match (Cross-Round Swap)
+        const targetRound = [...next[targetSwapIdx]];
+        const targetInnerIdx = targetRound.indexOf(newId);
+
+        if (targetInnerIdx !== -1) {
+          // Perform the swap
+          round[targetPos] = newId;          // Put newId here
+          targetRound[targetInnerIdx] = oldId; // Put oldId there
+
+          next[qIdx] = round;
+          next[targetSwapIdx] = targetRound;
+        } else {
+          // Should not happen, but fallback
+          round[targetPos] = newId;
+          next[qIdx] = round;
+        }
       } else {
+        // Standard Replacement (Direct)
         round[targetPos] = newId;
+        next[qIdx] = round;
       }
-      next[qIdx] = round;
+
       return next;
     });
   };
 
   const swapActivePlayer = (courtId: string, oldId: string, newId: string) => {
+    // Advanced Swap (Active <-> Queue)
+    // Check if newId is in the queue
+    const existingIndices: number[] = [];
+    matchQueue.forEach((m, idx) => {
+      if (m.includes(newId)) {
+        existingIndices.push(idx + 1);
+      }
+    });
+
+    let targetQueueIdx = -1;
+
+    if (existingIndices.length > 0) {
+      const roundsStr = existingIndices.map(i => `Round ${i}`).join(', ');
+      const choice = window.prompt(
+        `球員已排在 ${roundsStr}。\n\n` +
+        `1. 輸入場次號碼 (如 ${existingIndices[0]}) 進行「交換位置」\n` +
+        `2. 留空並按確定，進行「直接替換」(此人將同時在場上與隊列中)\n` +
+        `3. 按取消由不執行`
+      );
+
+      if (choice === null) return; // Cancelled
+
+      if (choice.trim() !== "") {
+        const parsed = parseInt(choice);
+        if (existingIndices.includes(parsed)) {
+          targetQueueIdx = parsed - 1;
+        } else {
+          alert("輸入的場次錯誤，操作已取消。");
+          return;
+        }
+      }
+    }
+
+    // 1. Update Court
     setCourts(prev => prev.map(c => {
       if (c.id !== courtId) return c;
       const nextP = [...c.players];
       const oIdx = nextP.indexOf(oldId);
       const tIdx = nextP.indexOf(newId);
+
       if (tIdx !== -1) {
+        // Swap within same court (rare but possible)
         nextP[oIdx] = newId;
         nextP[tIdx] = oldId;
       } else {
+        // Replace oldId with newId
         nextP[oIdx] = newId;
       }
       return { ...c, players: nextP };
     }));
+
+    // 2. If Cross-Swap, Update Queue
+    if (targetQueueIdx !== -1) {
+      setMatchQueue(prev => {
+        const next = [...prev];
+        const round = [...next[targetQueueIdx]];
+        const tIdx = round.indexOf(newId);
+        if (tIdx !== -1) {
+          round[tIdx] = oldId; // Put the player leaving the court into the queue
+          next[targetQueueIdx] = round;
+        }
+        return next;
+      });
+    }
   };
 
   if (!currentUser) {

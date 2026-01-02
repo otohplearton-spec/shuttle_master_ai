@@ -153,31 +153,45 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar relative">
         {swappingIdx && (
-          <div className="absolute inset-0 z-50 bg-white/95 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-xs font-black text-slate-500 uppercase">更換球員</span>
-              <button onClick={() => setSwappingIdx(null)} className="text-slate-400 font-bold p-1">✕</button>
-            </div>
-            <div className="space-y-1 overflow-y-auto h-[90%] custom-scrollbar">
-              {selectablePlayers.map(p => {
-                const isSelf = p.id === activeEditingId;
-                const isInMatch = currentMatchIds.includes(p.id) && !isSelf;
-                if (isSelf) return null;
-                return (
-                  <button
-                    key={p.id}
-                    onClick={() => { onSwapPlayer(swappingIdx.qIdx, activeEditingId || "", p.id); setSwappingIdx(null); }}
-                    className={`w-full text-left p-3 rounded-xl border flex items-center justify-between hover:bg-indigo-600 hover:text-white transition-all ${isInMatch ? 'bg-indigo-50 border-indigo-200' : 'bg-white'}`}
-                  >
-                    <span className="font-bold text-sm">
-                      {p.name}
-                      {playingPlayerIds.has(p.id) && <span className="text-[8px] bg-blue-100 text-blue-600 px-1 rounded ml-1">對戰中</span>}
-                      {busyPlayerIds.has(p.id) && !playingPlayerIds.has(p.id) && <span className="text-[8px] bg-amber-100 text-amber-600 px-1 rounded ml-1">排隊中</span>}
-                    </span>
-                    <span className="text-[10px] font-black opacity-60">L{p.level}</span>
-                  </button>
-                );
-              })}
+          <div className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden">
+              <div className="p-4 border-b bg-slate-50 flex justify-between items-center">
+                <span className="text-lg font-black text-slate-800 flex items-center gap-2">
+                  🔄 選擇替換球員
+                </span>
+                <button onClick={() => setSwappingIdx(null)} className="w-8 h-8 rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300 flex items-center justify-center font-bold transition-colors">✕</button>
+              </div>
+
+              <div className="p-2 overflow-y-auto flex-1 custom-scrollbar space-y-1">
+                {selectablePlayers.map(p => {
+                  const isSelf = p.id === activeEditingId;
+                  const isInMatch = currentMatchIds.includes(p.id) && !isSelf;
+                  if (isSelf) return null;
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => { onSwapPlayer(swappingIdx.qIdx, activeEditingId || "", p.id); setSwappingIdx(null); }}
+                      className={`w-full text-left p-4 rounded-2xl border flex items-center justify-between hover:bg-indigo-600 hover:text-white transition-all group ${isInMatch ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-slate-100'}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-white shadow-sm ${p.gender === Gender.FEMALE ? 'bg-pink-400' : 'bg-blue-500'}`}>
+                          {p.name.charAt(0)}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-base group-hover:text-white text-slate-800">
+                            {p.name}
+                          </span>
+                          <div className="flex gap-1">
+                            {playingPlayerIds.has(p.id) && <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-bold group-hover:bg-white/20 group-hover:text-white">對戰中</span>}
+                            {busyPlayerIds.has(p.id) && !playingPlayerIds.has(p.id) && <span className="text-[10px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded font-bold group-hover:bg-white/20 group-hover:text-white">排隊中</span>}
+                          </div>
+                        </div>
+                      </div>
+                      <span className="text-sm font-black opacity-40 group-hover:opacity-100">L{p.level}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}
