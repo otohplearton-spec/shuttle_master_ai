@@ -13,7 +13,33 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     const handleLineLogin = async () => {
         setIsLoading(true);
         try {
-            lineService.login();
+            // Detect if running in Standalone (PWA) mode on iOS
+            const isStandalone = (window.navigator as any).standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+
+            if (isStandalone) {
+                // Use Popup Bridge for PWA to avoid jumping to Safari
+                const width = 600;
+                const height = 700;
+                const left = (window.innerWidth - width) / 2;
+                const top = (window.innerHeight - height) / 2;
+                const popup = window.open(
+                    window.location.href + '?line_login_check=true', // Trigger same page but might need param to ensure LIFF handling
+                    'LINE_LOGIN',
+                    `width=${width},height=${height},top=${top},left=${left},status=yes,scrollbars=yes`
+                );
+
+                // If popup blocked or failed, fallback to standard redirect
+                if (!popup) {
+                    lineService.login();
+                } else {
+                    // Reset loading after a while or wait for message (message handled in App.tsx)
+                    // We rely on App.tsx listener to update state, which unmounts LoginScreen
+                    setTimeout(() => setIsLoading(false), 3000);
+                }
+            } else {
+                // Standard Browser: Redirect is fine
+                lineService.login();
+            }
         } catch (error) {
             console.error('Login failed', error);
             setIsLoading(false);
