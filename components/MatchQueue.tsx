@@ -202,15 +202,29 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
                     </button>
                     {availableCourts.length > 0 && !isExpanded && (
                       <div className="flex gap-1">
-                        {availableCourts.map(c => (
-                          <button
-                            key={c.id}
-                            onClick={() => onAssignToCourt(c.id, qIdx)}
-                            className="bg-emerald-100 text-emerald-700 text-[8px] font-black px-1.5 py-0.5 rounded hover:bg-emerald-600 hover:text-white transition-colors"
-                          >
-                            至 {c.name.replace('場地 ', '')}
-                          </button>
-                        ))}
+                        {availableCourts.map(c => {
+                          const busyInMatch = match.filter(pid => playingPlayerIds.has(pid));
+                          const isMatchBusy = busyInMatch.length > 0;
+                          return (
+                            <button
+                              key={c.id}
+                              onClick={() => {
+                                if (isMatchBusy) {
+                                  const names = busyInMatch.map(id => allPlayers.find(p => p.id === id)?.name || id).join(', ');
+                                  alert(`無法排入：球員 ${names} 目前正在場上對戰中！`);
+                                  return;
+                                }
+                                onAssignToCourt(c.id, qIdx);
+                              }}
+                              className={`text-[8px] font-black px-1.5 py-0.5 rounded transition-colors ${isMatchBusy
+                                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-600 hover:text-white'
+                                }`}
+                            >
+                              至 {c.name.replace('場地 ', '')} {isMatchBusy && '(忙碌)'}
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -235,14 +249,26 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
                       <div className="flex flex-col gap-1 flex-1">
                         {[match[0], match[1]].map(id => {
                           const p = allPlayers.find(x => x.id === id);
-                          return <div key={id} className="bg-slate-50 p-2 rounded-lg font-bold text-center truncate">{p?.name || '?'}</div>;
+                          const isBusy = playingPlayerIds.has(id);
+                          return (
+                            <div key={id} className={`p-2 rounded-lg font-bold text-center truncate ${isBusy ? 'bg-red-50 text-red-600 ring-1 ring-red-200' : 'bg-slate-50'}`}>
+                              {p?.name || '?'}
+                              {isBusy && <span className="text-[9px] ml-1">(戰)</span>}
+                            </div>
+                          );
                         })}
                       </div>
                       <div className="font-black text-slate-300 italic text-xl">VS</div>
                       <div className="flex flex-col gap-1 flex-1">
                         {[match[2], match[3]].map(id => {
                           const p = allPlayers.find(x => x.id === id);
-                          return <div key={id} className="bg-slate-50 p-2 rounded-lg font-bold text-center truncate">{p?.name || '?'}</div>;
+                          const isBusy = playingPlayerIds.has(id);
+                          return (
+                            <div key={id} className={`p-2 rounded-lg font-bold text-center truncate ${isBusy ? 'bg-red-50 text-red-600 ring-1 ring-red-200' : 'bg-slate-50'}`}>
+                              {p?.name || '?'}
+                              {isBusy && <span className="text-[9px] ml-1">(戰)</span>}
+                            </div>
+                          );
                         })}
                       </div>
                     </div>

@@ -160,7 +160,7 @@ const App: React.FC = () => {
   // --- Derived State ---
 
   const playingPlayerIds = useMemo(() => {
-    return new Set(courts.flatMap(c => c.players).filter(id => id !== ""));
+    return new Set(courts.filter(c => c.isActive).flatMap(c => c.players).filter(id => id !== ""));
   }, [courts]);
 
   const queuedPlayerIds = useMemo(() => {
@@ -316,33 +316,57 @@ const App: React.FC = () => {
     const availableCourts = courts.filter(c => !c.isActive);
     if (availableCourts.length === 0 || matchQueue.length === 0) return;
 
-    let currentQueue = [...matchQueue];
+    let updatedQueue = [...matchQueue];
     let updatedCourts = [...courts];
     let assignedCount = 0;
 
+    // Set of players currently playing OR assigned in this batch
+    const busyIds = new Set(playingPlayerIds);
+
     for (let i = 0; i < updatedCourts.length; i++) {
-      if (!updatedCourts[i].isActive && currentQueue.length > 0) {
-        const nextMatch = currentQueue.shift()!;
-        const courtName = updatedCourts[i].name;
+      // Only target currently available courts
+      if (!updatedCourts[i].isActive) {
+        // Find the first valid match in the queue
+        const validMatchIndex = updatedQueue.findIndex(match =>
+          !match.some(id => busyIds.has(id))
+        );
 
-        updatedCourts[i] = {
-          ...updatedCourts[i],
-          players: nextMatch,
-          isActive: true,
-          startTime: Date.now()
-        };
+        if (validMatchIndex !== -1) {
+          const matchToAssign = updatedQueue[validMatchIndex];
 
-        assignedCount++;
-        const playerNames = players.filter(p => nextMatch.includes(p.id)).map(p => p.name);
-        if (playerNames.length > 0 && isAutoBroadcastEnabled) {
-          geminiService.broadcastAnnouncement(playerNames, courtName);
+          // Remove from queue
+          updatedQueue.splice(validMatchIndex, 1);
+
+          // Mark players as busy for subsequent iterations in this loop
+          matchToAssign.forEach(id => busyIds.add(id));
+
+          // Assign to court
+          updatedCourts[i] = {
+            ...updatedCourts[i],
+            players: matchToAssign,
+            isActive: true,
+            startTime: Date.now()
+          };
+
+          assignedCount++;
+
+          const playerNames = players.filter(p => matchToAssign.includes(p.id)).map(p => p.name);
+          if (playerNames.length > 0 && isAutoBroadcastEnabled) {
+            geminiService.broadcastAnnouncement(playerNames, updatedCourts[i].name);
+          }
         }
       }
     }
 
     if (assignedCount > 0) {
-      setMatchQueue(currentQueue);
+      setMatchQueue(updatedQueue);
       setCourts(updatedCourts);
+
+      if (assignedCount < availableCourts.length) {
+        alert(`已指派 ${assignedCount} 場比賽。部分場地因球員忙碌或佇列不足而未指派。`);
+      }
+    } else {
+      alert("佇列中所有對戰的球員似乎都正在忙碌中，無法自動指派。");
     }
   };
 
@@ -725,7 +749,120 @@ const App: React.FC = () => {
                 onRemoveCourt={removeCourt}
                 onUpdateName={updateCourtName}
                 matchQueueCount={matchQueue.length}
-                onAssignNext={() => assignMatchToCourt(court.id, 0)}
+                nextMatch={matchQueue[0]} // For visual indication
+                onAssignNext={() => {
+                  const validIndex = matchQueue.findIndex(match => !match.some(id => playingPlayerIds.has(id)));
+
+                  if (validIndex === -1) {
+                    // Try to suggest a Smart Swap with *Queued* players (Fairness + Level Balance)
+                    const topMatch = matchQueue[0];
+                    const busyInTop = topMatch.filter(id => playingPlayerIds.has(id));
+
+                    if (busyInTop.length > 0) {
+                      // Find candidates from *subsequent* matches in the queue
+                      const swaps: { busyId: string, targetId: string, matchIndex: number, matchPlayerIndex: number }[] = [];
+                      const usedTargetIds = new Set<string>();
+
+                      // Try to find a swap for each busy player
+                      for (const busyId of busyInTop) {
+                        const busyPlayer = players.find(p => p.id === busyId);
+                        if (!busyPlayer) continue;
+
+                        let bestCandidate: { id: string, matchIndex: number, playerIndex: number, score: number } | null = null;
+
+                        // Search matches starting from index 1
+                        for (let i = 1; i < matchQueue.length; i++) {
+                          const candidateMatch = matchQueue[i];
+                          if (candidateMatch.includes(busyId)) continue;
+
+                          for (let j = 0; j < candidateMatch.length; j++) {
+                            const cId = candidateMatch[j];
+                            if (playingPlayerIds.has(cId) || usedTargetIds.has(cId) || topMatch.includes(cId)) continue;
+
+                            const candidate = players.find(p => p.id === cId);
+                            if (!candidate) continue;
+
+                            // Score: Level Diff (Lower is better) * 100 + Games Diff (Lower is better)
+                            // Primary: Level, Secondary: Games
+                            const levelDiff = Math.abs(candidate.level - busyPlayer.level);
+                            const gamesDiff = candidate.gamesPlayed; // Just prioritize low games
+                            const score = levelDiff * 1000 + gamesDiff;
+
+                            if (!bestCandidate || score < bestCandidate.score) {
+                              bestCandidate = { id: cId, matchIndex: i, playerIndex: j, score };
+                            }
+                          }
+                        }
+
+                        if (bestCandidate) {
+                          swaps.push({ busyId, targetId: bestCandidate.id, matchIndex: bestCandidate.matchIndex, matchPlayerIndex: bestCandidate.playerIndex });
+                          usedTargetIds.add(bestCandidate.id);
+                        }
+                      }
+
+                      // Only proceed if we found swaps for ALL busy players in top match
+                      if (swaps.length > 0 && swaps.length === busyInTop.length) {
+                        const swapDesc = swaps.map(s => {
+                          const bName = players.find(p => p.id === s.busyId)?.name;
+                          const tName = players.find(p => p.id === s.targetId)?.name;
+                          const bLevel = players.find(p => p.id === s.busyId)?.level;
+                          const tLevel = players.find(p => p.id === s.targetId)?.level;
+                          return `• ${bName} (忙/L${bLevel}) ↔ ${tName} (第${s.matchIndex + 1}組/L${tLevel})`;
+                        }).join('\n');
+
+                        if (window.confirm(`所有排程皆被卡住。\n建議與後方隊伍交換 (優先匹配等級) 以解鎖第一組：\n\n${swapDesc}\n\n是否執行交換並直接上場？`)) {
+                          let newQueue = [...matchQueue];
+                          let newTopMatch = [...topMatch];
+
+                          // Apply swaps
+                          swaps.forEach(s => {
+                            // 1. Put target into top match
+                            const busyIdx = newTopMatch.indexOf(s.busyId);
+                            if (busyIdx !== -1) newTopMatch[busyIdx] = s.targetId;
+
+                            // 2. Put busy into later match
+                            const laterMatch = [...newQueue[s.matchIndex]];
+                            laterMatch[s.matchPlayerIndex] = s.busyId;
+                            newQueue[s.matchIndex] = laterMatch;
+                          });
+
+                          // Update queue first to reflect the swap
+                          newQueue[0] = newTopMatch;
+                          setMatchQueue(newQueue.slice(1)); // Remove top match as we are assigning it
+
+                          // Assign the new top match immediately
+                          setCourts(prev => prev.map(c => {
+                            if (c.id === court.id) {
+                              const courtName = c.name;
+                              const pNames = players.filter(p => newTopMatch.includes(p.id)).map(p => p.name);
+                              if (pNames.length > 0 && isAutoBroadcastEnabled) {
+                                geminiService.broadcastAnnouncement(pNames, courtName);
+                              }
+                              return { ...c, players: newTopMatch, isActive: true, startTime: Date.now() };
+                            }
+                            return c;
+                          }));
+                          return;
+                        } else {
+                          return;
+                        }
+                      }
+                    }
+
+                    alert("目前佇列中所有對戰都有球員正在忙碌中，且後方無足夠閒置人員可供交換！");
+                    return;
+                  }
+
+                  if (validIndex === 0) {
+                    assignMatchToCourt(court.id, 0);
+                  } else {
+                    // Smart Skip
+                    const skippedCount = validIndex;
+                    if (window.confirm(`前 ${skippedCount} 組對戰有球員忙碌中，是否直接指派第 ${validIndex + 1} 組 (可上場)？`)) {
+                      assignMatchToCourt(court.id, validIndex);
+                    }
+                  }
+                }}
               />
             ))}
           </div>
