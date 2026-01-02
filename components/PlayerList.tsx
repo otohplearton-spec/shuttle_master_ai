@@ -131,8 +131,9 @@ const PlayerList: React.FC<PlayerListProps> = ({
 
           // 獲取「下一場」搭檔與對手
           const getNextMatch = (playerId: string) => {
-            const nextMatch = matchQueue.find(m => m.includes(playerId));
-            if (!nextMatch) return null;
+            const queueIndex = matchQueue.findIndex(m => m.includes(playerId));
+            if (queueIndex === -1) return null;
+            const nextMatch = matchQueue[queueIndex];
 
             const pIdx = nextMatch.indexOf(playerId);
             const isTeam1 = pIdx < 2;
@@ -140,6 +141,7 @@ const PlayerList: React.FC<PlayerListProps> = ({
             const opponentIds = isTeam1 ? [nextMatch[2], nextMatch[3]] : [nextMatch[0], nextMatch[1]];
 
             return {
+              roundNumber: queueIndex + 1,
               partner: players.find(p => p.id === partnerId),
               opponents: opponentIds.map(id => players.find(p => p.id === id))
             };
@@ -212,9 +214,14 @@ const PlayerList: React.FC<PlayerListProps> = ({
                   {/* 下一場對戰詳情 */}
                   {nextMatchInfo && (
                     <div className="p-3 bg-indigo-50/50 rounded-xl border border-indigo-200">
-                      <h4 className="text-[10px] font-black text-indigo-700 uppercase mb-2 flex items-center gap-1">
-                        <span className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce"></span>
-                        即將上場 (Next Match)
+                      <h4 className="text-[10px] font-black text-indigo-700 uppercase mb-2 flex items-center justify-between">
+                        <span className="flex items-center gap-1">
+                          <span className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce"></span>
+                          即將上場 (Next Match)
+                        </span>
+                        <span className="bg-indigo-600 text-white px-2 py-0.5 rounded text-[9px]">
+                          Round {nextMatchInfo.roundNumber}
+                        </span>
                       </h4>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
