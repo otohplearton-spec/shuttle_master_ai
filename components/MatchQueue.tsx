@@ -27,12 +27,25 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
   availableCourts, onAssignToCourt, onAutoAssignAll
 }) => {
   const [swappingIdx, setSwappingIdx] = useState<{ qIdx: number, pIdx: number } | null>(null);
-  const calculateRounds = (count: number) => Math.max(1, Math.round((count * 6) / 4));
-  const [roundsToSchedule, setRoundsToSchedule] = useState(() => calculateRounds(allPlayers.length));
-
+  // 計算建議場次：(有效球員數 * 6 / 4) - 目前佇列數
+  // 動態調整：隨著佇列增加，建議值會減少，最低為 1
+  // 計算建議場次：
+  // 目標總場次 = Σ(球員目標場數) / 4
+  // 剩餘需排 = 目標總場次 - 已結束(History) - 進行中(Active) - 待上場(Queue)
   React.useEffect(() => {
-    setRoundsToSchedule(calculateRounds(allPlayers.length));
-  }, [allPlayers.length]);
+    const activePlayers = allPlayers.filter(p => !p.isPaused);
+    const totalTargetGames = activePlayers.reduce((sum, p) => sum + (p.targetGames || 6), 0);
+    const targetMatchCount = Math.ceil(totalTargetGames / 4);
+
+    const historyCount = history.length;
+    const activeMatchesCount = Math.floor(playingPlayerIds.size / 4);
+    const queueCount = queue.length;
+
+    const suggested = Math.max(1, targetMatchCount - historyCount - activeMatchesCount - queueCount);
+    setRoundsToSchedule(suggested);
+  }, [allPlayers, queue.length, history.length, playingPlayerIds.size]);
+
+  const [roundsToSchedule, setRoundsToSchedule] = useState(1);
   const [expandedMatchIdx, setExpandedMatchIdx] = useState<number | null>(null);
 
   const activeEditingId = swappingIdx ? queue[swappingIdx.qIdx][swappingIdx.pIdx] : null;

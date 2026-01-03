@@ -109,12 +109,8 @@ const PlayerList: React.FC<PlayerListProps> = ({
   };
 
   // 排序球員
-  const sortedPlayers = [...players].sort((a, b) => {
-    const gamesA = a.gamesPlayed + getQueuedCount(a.id);
-    const gamesB = b.gamesPlayed + getQueuedCount(b.id);
-    if (gamesA !== gamesB) return gamesA - gamesB;
-    return b.level - a.level;
-  });
+  // 改為固定排序 (依照加入時間)，避免因場次變化導致名單跳動
+  const sortedPlayers = players;
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex-1 overflow-hidden flex flex-col">
@@ -163,13 +159,11 @@ const PlayerList: React.FC<PlayerListProps> = ({
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm flex-shrink-0 ${player.gender === Gender.FEMALE ? 'bg-pink-400' : 'bg-blue-400'} ${getAvatarLevelClasses(player.level)}`}>
                     {player.name.charAt(0)}
                   </div>
-                  <div className="min-w-0">
-                    <div className="font-bold text-slate-800 flex items-center gap-2">
-                      <span className="truncate">{player.name}</span>
-                      <span className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase tracking-tighter ${isPaused ? 'bg-slate-200 text-slate-500' : isPlaying ? 'bg-blue-600 text-white' : isQueued ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-500'}`}>
-                        {isPaused ? '暫離中' : isPlaying ? '對戰中' : isQueued ? '排隊中' : '休息中'}
-                      </span>
-                    </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-bold text-slate-800 text-base truncate mb-0.5">{player.name}</div>
+                    <span className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase tracking-tighter inline-block ${isPaused ? 'bg-slate-200 text-slate-500' : isPlaying ? 'bg-blue-600 text-white' : isQueued ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                      {isPaused ? '暫離中' : isPlaying ? '對戰中' : isQueued ? '排隊中' : '休息中'}
+                    </span>
                   </div>
                 </div>
                 <div className="flex gap-1">

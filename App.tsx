@@ -607,8 +607,14 @@ const App: React.FC = () => {
 
 
 
-      // 如果都未達標 -> 維持 Round Robin，場次少者優先
+      // 如果都未達標 -> 優先滿足「剩餘場次需求 (Deficit)」較大者
+      // 例如：A(0/7) 剩7, B(0/6) 剩6 -> A 優先
+      // 這能確保高目標者比較早開始打，不會最後時間不夠
       if (!finishedA) {
+        const deficitA = tA - gA;
+        const deficitB = tB - gB;
+        if (deficitA !== deficitB) return deficitB - deficitA; // 大者優先
+
         if (gA !== gB) return gA - gB;
       } else {
         // 如果都已達標 (加賽/湊人數階段)
