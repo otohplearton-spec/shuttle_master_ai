@@ -22,8 +22,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                 const height = 700;
                 const left = (window.innerWidth - width) / 2;
                 const top = (window.innerHeight - height) / 2;
+
+                // Use clean URL for popup
+                const popupUrl = window.location.origin + '?line_login_check=true';
+
                 const popup = window.open(
-                    window.location.href + '?line_login_check=true', // Trigger same page but might need param to ensure LIFF handling
+                    popupUrl,
                     'LINE_LOGIN',
                     `width=${width},height=${height},top=${top},left=${left},status=yes,scrollbars=yes`
                 );
