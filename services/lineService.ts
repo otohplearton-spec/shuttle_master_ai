@@ -1,5 +1,6 @@
 import liff from '@line/liff';
 import { UserProfile } from '../types';
+import { memberService } from './memberService';
 
 const LIFF_ID = import.meta.env.VITE_LINE_LIFF_ID;
 
@@ -51,11 +52,16 @@ export const lineService = {
 
         try {
             const profile = await liff.getProfile();
+
+            // Check membership status via Google Sheets
+            const memberStatus = await memberService.checkMembership(profile.userId, profile.displayName);
+
             return {
                 userId: profile.userId,
                 displayName: profile.displayName,
                 pictureUrl: profile.pictureUrl,
-                isPro: false // Default to false, can be fetched from backend later
+                isPro: memberStatus.isPro,
+                expiryDate: memberStatus.expiryDate
             };
         } catch (error) {
             console.error('Failed to get user profile', error);

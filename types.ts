@@ -41,4 +41,5 @@ export interface UserProfile {
   displayName: string;
   pictureUrl?: string; // Optional URL for profile picture
   isPro: boolean;
+  expiryDate?: string;
 }

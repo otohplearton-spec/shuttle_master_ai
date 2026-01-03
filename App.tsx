@@ -11,6 +11,7 @@ import ScoreInputModal from './components/ScoreInputModal';
 import LoginScreen from './components/LoginScreen';
 import { lineService } from './services/lineService';
 import { geminiService } from './services/geminiService';
+import { memberService } from './services/memberService';
 
 // GLOBAL ERROR HANDLER FOR MOBILE DEBUGGING
 if (typeof window !== 'undefined') {
@@ -258,8 +259,7 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('shuttle_courts');
     if (saved) return JSON.parse(saved);
     return [
-      { id: '1', name: '場地 A', players: [], isActive: false },
-      { id: '2', name: '場地 B', players: [], isActive: false }
+      { id: '1', name: '場地 A', players: [], isActive: false }
     ];
   });
 
@@ -297,9 +297,52 @@ const App: React.FC = () => {
     return saved !== null ? JSON.parse(saved) : true;
   });
 
+  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'fail'>('idle');
+
   const handleLogin = (user: UserProfile) => {
     setCurrentUser(user);
     localStorage.setItem('shuttle_master_user', JSON.stringify(user));
+  };
+
+  // Check for Payment Callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const transactionId = params.get('transactionId');
+    if (transactionId) {
+      setPaymentStatus('processing');
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+
+      memberService.confirmUpgrade(transactionId).then(res => {
+        if (res.success) {
+          alert('🎉 恭喜升級成為 PRO 會員！');
+          setPaymentStatus('success');
+          // Force reload profile to update UI immediately
+          lineService.getProfile().then(p => {
+            if (p) {
+              setCurrentUser(p);
+              localStorage.setItem('shuttle_master_user', JSON.stringify(p));
+            }
+            window.location.reload();
+          });
+        } else {
+          alert('付款確認失敗: ' + res.message);
+          setPaymentStatus('fail');
+        }
+      });
+    }
+  }, []);
+
+  const handleUpgrade = async () => {
+    if (!currentUser) return;
+    if (!window.confirm('確定要升級 PRO 嗎？(將導向 LINE Pay 測試付款 NT$1)')) return;
+
+    const res = await memberService.requestUpgrade(currentUser.userId);
+    if (res.success && res.paymentUrl) {
+      window.location.href = res.paymentUrl;
+    } else {
+      alert('建立付款失敗: ' + res.message);
+    }
   };
 
   const handleLogout = () => {
@@ -407,8 +450,7 @@ const App: React.FC = () => {
       setMatchCount(0);
       setMatchQueue([]);
       setCourts([
-        { id: '1', name: '場地 A', players: [], isActive: false },
-        { id: '2', name: '場地 B', players: [], isActive: false }
+        { id: '1', name: '場地 A', players: [], isActive: false }
       ]);
 
       setIsSessionActive(false);
@@ -447,6 +489,14 @@ const App: React.FC = () => {
   };
 
   const addCourt = () => {
+    // PRO Feature: Limit courts for non-pro users
+    if (courts.length >= 1 && !currentUser?.isPro) {
+      if (window.confirm("✨ 進階功能提示\n\n一般會員僅限使用 1 面場地。\n\n是否立即升級 PRO 會員 (NT$1) 以解鎖無限場地？")) {
+        handleUpgrade();
+      }
+      return;
+    }
+
     const newCourt: Court = {
       id: crypto.randomUUID(),
       name: `場地 ${String.fromCharCode(64 + courts.length + 1)}`,
@@ -985,6 +1035,11 @@ const App: React.FC = () => {
                 <p className="text-slate-400 font-bold tracking-widest text-xs uppercase">Centralized Smart Queue System</p>
                 <span className="hidden md:inline-block w-1 h-1 bg-slate-300 rounded-full"></span>
                 <p className="hidden md:block text-slate-500 text-xs font-bold">Hi, {currentUser.displayName}</p>
+                {currentUser.isPro && (
+                  <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md ml-2 shadow-sm border border-amber-200 tracking-wider">
+                    PRO
+                  </span>
+                )}
               </div>
             </div>
           </div>
