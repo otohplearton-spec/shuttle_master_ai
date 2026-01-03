@@ -12,6 +12,42 @@ import LoginScreen from './components/LoginScreen';
 import { lineService } from './services/lineService';
 import { geminiService } from './services/geminiService';
 
+// GLOBAL ERROR HANDLER FOR MOBILE DEBUGGING
+if (typeof window !== 'undefined') {
+  window.onerror = function (message, source, lineno, colno, error) {
+    const errDiv = document.createElement('div');
+    errDiv.style.position = 'fixed';
+    errDiv.style.top = '0';
+    errDiv.style.left = '0';
+    errDiv.style.width = '100%';
+    errDiv.style.backgroundColor = 'rgba(255, 0, 0, 0.9)';
+    errDiv.style.color = 'white';
+    errDiv.style.padding = '20px';
+    errDiv.style.zIndex = '99999';
+    errDiv.style.fontSize = '14px';
+    errDiv.style.whiteSpace = 'pre-wrap';
+    errDiv.style.wordBreak = 'break-all';
+    errDiv.innerText = `⚠️ FATAL ERROR:\n${message}\n\nLocation: ${source}:${lineno}`;
+    document.body.appendChild(errDiv);
+  };
+
+  window.onunhandledrejection = function (event) {
+    const errDiv = document.createElement('div');
+    errDiv.style.position = 'fixed';
+    errDiv.style.bottom = '0';
+    errDiv.style.left = '0';
+    errDiv.style.width = '100%';
+    errDiv.style.backgroundColor = 'rgba(139, 0, 0, 0.9)';
+    errDiv.style.color = 'white';
+    errDiv.style.padding = '20px';
+    errDiv.style.zIndex = '99999';
+    errDiv.style.fontSize = '12px';
+    errDiv.style.wordBreak = 'break-all';
+    errDiv.innerText = `⚠️ ASYNC ERROR: ${event.reason}`;
+    document.body.appendChild(errDiv);
+  };
+}
+
 const App: React.FC = () => {
   // ---------------------------------------------------------------------------
   // 🚀 CRITICAL: POPUP MODE CHECK
