@@ -14,12 +14,12 @@ import { geminiService } from './services/geminiService';
 
 const App: React.FC = () => {
   // ---------------------------------------------------------------------------
-  // 🚀 CRITICAL: POPUP MODE CHECK (Must run before anything else to avoid crashes)
+  // 🚀 CRITICAL: POPUP MODE CHECK
   // ---------------------------------------------------------------------------
-  // We check URL params directly for immediate rendering decision
   const isPopupMode = typeof window !== 'undefined' &&
     (window.location.search.includes('line_login_check') || window.location.search.includes('liff.state'));
 
+  // --- POPUP STATE ---
   const [popupState, setPopupState] = useState<{
     profile: UserProfile | null;
     status: string;
@@ -36,6 +36,19 @@ const App: React.FC = () => {
     setPopupState(prev => ({ ...prev, logs: [...prev.logs, `${new Date().toLocaleTimeString()} - ${msg}`] }));
   };
 
+  // --- MAIN APP STATE (Defined here but used conditionally) ---
+  const [isSessionActive, setIsSessionActive] = useState(() => {
+    return localStorage.getItem('shuttle_session_active') === 'true';
+  });
+
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
+    try {
+      const saved = localStorage.getItem('shuttle_master_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+
+  // --- POPUP LOGIC EFFECT ---
   useEffect(() => {
     if (!isPopupMode) return;
 
@@ -91,6 +104,38 @@ const App: React.FC = () => {
     setTimeout(runPopupFlow, 100);
   }, [isPopupMode]);
 
+  // --- REGULAR APP LOGIC EFFECT ---
+  useEffect(() => {
+    if (isPopupMode) return;
+
+    const initMain = async () => {
+      try {
+        const isLoggedIn = await lineService.init();
+        if (isLoggedIn && !currentUser) {
+          const profile = await lineService.getProfile();
+          if (profile) {
+            setCurrentUser(profile);
+            localStorage.setItem('shuttle_master_user', JSON.stringify(profile));
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    initMain();
+
+    const onMsg = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === 'LINE_LOGIN_SUCCESS' && event.data?.user) {
+        const u = event.data.user;
+        setCurrentUser(u);
+        localStorage.setItem('shuttle_master_user', JSON.stringify(u));
+      }
+    };
+    window.addEventListener('message', onMsg);
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
   // --- POPUP RENDER ---
   if (isPopupMode) {
     const { profile, status, error, logs } = popupState;
@@ -100,9 +145,10 @@ const App: React.FC = () => {
         <div className="min-h-screen flex flex-col items-center justify-center bg-red-50 p-6 text-center">
           <h2 className="text-xl font-black text-red-700 mb-2">Login Error</h2>
           <p className="text-red-500 text-sm mb-6 break-all">{error}</p>
-          <div className="text-xs text-left bg-slate-900 text-green-400 p-2 rounded w-full overflow-auto h-32">
-            {logs.join('\n')}
+          <div className="text-xs text-left bg-slate-900 text-green-400 p-2 rounded w-full overflow-auto h-32 mt-4">
+            {logs.map((L, i) => <div key={i}>{L}</div>)}
           </div>
+          <a href="/" className="mt-6 px-4 py-2 bg-white border border-red-200 text-red-600 rounded-lg text-sm">Return Home</a>
         </div>
       );
     }
@@ -146,51 +192,36 @@ const App: React.FC = () => {
 
   // --- Initialize State from LocalStorage ---
 
-  const [isSessionActive, setIsSessionActive] = useState(() => {
-    return localStorage.getItem('shuttle_session_active') === 'true';
-  });
-
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
+  const initMain = async () => {
     try {
-      const saved = localStorage.getItem('shuttle_master_user');
-      return saved ? JSON.parse(saved) : null;
-    } catch { return null; }
-  });
-
-  // Regular Init for Main App
-  useEffect(() => {
-    if (isPopupMode) return; // Double protection
-
-    const initMain = async () => {
-      try {
-        const isLoggedIn = await lineService.init();
-        if (isLoggedIn && !currentUser) {
-          const profile = await lineService.getProfile();
-          if (profile) {
-            setCurrentUser(profile);
-            localStorage.setItem('shuttle_master_user', JSON.stringify(profile));
-          }
+      const isLoggedIn = await lineService.init();
+      if (isLoggedIn && !currentUser) {
+        const profile = await lineService.getProfile();
+        if (profile) {
+          setCurrentUser(profile);
+          localStorage.setItem('shuttle_master_user', JSON.stringify(profile));
         }
+      }
         <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
         <p className="text-slate-500 font-bold animate-pulse mb-8">{popupStatus}</p>
 
-        {
-          popupError && (
-            <div className="w-full bg-red-50 border border-red-200 p-4 rounded-xl text-red-600 text-sm mb-4 break-all">
-              <strong>Error:</strong> {popupError}
-            </div>
-          )
-        }
-
-        {/* Always Show Logs in Loading/Error State */ }
-        <div className="w-full max-w-sm text-left mt-4 border-t border-slate-200 pt-4">
-          <p className="text-xs font-bold text-slate-400 mb-2 uppercase">Debug Console:</p>
-          <div className="bg-slate-900 text-green-400 p-3 rounded-lg text-[10px] font-mono h-48 overflow-y-auto shadow-inner">
-            {debugLogs.length === 0 ? "Waiting for logs..." : debugLogs.map((log, i) => (
-              <div key={i} className="mb-1 border-b border-white/5 pb-0.5 last:border-0">{log}</div>
-            ))}
+      {
+        popupError && (
+          <div className="w-full bg-red-50 border border-red-200 p-4 rounded-xl text-red-600 text-sm mb-4 break-all">
+            <strong>Error:</strong> {popupError}
           </div>
+        )
+      }
+
+      {/* Always Show Logs in Loading/Error State */ }
+      <div className="w-full max-w-sm text-left mt-4 border-t border-slate-200 pt-4">
+        <p className="text-xs font-bold text-slate-400 mb-2 uppercase">Debug Console:</p>
+        <div className="bg-slate-900 text-green-400 p-3 rounded-lg text-[10px] font-mono h-48 overflow-y-auto shadow-inner">
+          {debugLogs.length === 0 ? "Waiting for logs..." : debugLogs.map((log, i) => (
+            <div key={i} className="mb-1 border-b border-white/5 pb-0.5 last:border-0">{log}</div>
+          ))}
         </div>
+      </div>
       </div >
     );
   }
