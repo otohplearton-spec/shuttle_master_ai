@@ -12,6 +12,7 @@ interface PlayerListProps {
   queuedPlayerIds: Set<string>;
   onDelete: (id: string) => void;
   onUpdateLevel: (id: string, newLevel: number) => void;
+  onUpdateTargetGames: (id: string, newTarget: number) => void;
 }
 
 const PlayerList: React.FC<PlayerListProps> = ({
@@ -22,7 +23,8 @@ const PlayerList: React.FC<PlayerListProps> = ({
   playingPlayerIds,
   queuedPlayerIds,
   onDelete,
-  onUpdateLevel
+  onUpdateLevel,
+  onUpdateTargetGames
 }) => {
   const [selectedPlayerHistory, setSelectedPlayerHistory] = useState<string | null>(null);
 
@@ -192,11 +194,28 @@ const PlayerList: React.FC<PlayerListProps> = ({
                       <span className="text-slate-400 uppercase tracking-tighter">已排</span>
                       <span className="text-amber-600 text-sm leading-none">{totalAssignedCount}</span>
                     </div>
-                    <div className="flex flex-col items-center border-l pl-3">
+                    <div className="flex flex-col items-center border-l pl-3 group/target cursor-default">
                       <span className="text-slate-400 uppercase tracking-tighter">總進度</span>
-                      <span className={`text-sm leading-none ${totalGames >= 6 ? 'text-emerald-600' : 'text-slate-700'}`}>
-                        {totalGames}/6
-                      </span>
+                      <div className="flex items-center gap-0.5 relative">
+                        <span className={`text-sm font-black leading-none ${totalGames >= (player.targetGames || 6) ? 'text-emerald-600' : 'text-slate-700'}`}>
+                          {totalGames}
+                        </span>
+                        <span className="text-xs text-slate-300 font-light">/</span>
+
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onUpdateTargetGames(player.id, Math.max(1, (player.targetGames || 6) - 1)); }}
+                            className="w-4 h-4 rounded flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 text-[10px] md:opacity-0 md:group-hover/target:opacity-100 transition-opacity"
+                          >-</button>
+
+                          <span className="text-xs font-bold text-slate-600 min-w-[12px] text-center">{player.targetGames || 6}</span>
+
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onUpdateTargetGames(player.id, (player.targetGames || 6) + 1); }}
+                            className="w-4 h-4 rounded flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-600 text-[10px] md:opacity-0 md:group-hover/target:opacity-100 transition-opacity"
+                          >+</button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

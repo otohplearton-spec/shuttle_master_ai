@@ -394,6 +394,10 @@ const App: React.FC = () => {
     setPlayers(prev => prev.map(p => p.id === id ? { ...p, level: Math.max(1, Math.min(15, newLevel)) } : p));
   };
 
+  const updatePlayerTargetGames = (id: string, newTarget: number) => {
+    setPlayers(prev => prev.map(p => p.id === id ? { ...p, targetGames: Math.max(1, newTarget) } : p));
+  };
+
   const deletePlayer = (id: string) => {
     if (busyPlayerIds.has(id)) {
       alert("該球友正在比賽或排隊中，請先從名單移除再刪除！");
@@ -585,7 +589,35 @@ const App: React.FC = () => {
     const sortedByGames = [...available].sort((a, b) => {
       const gA = projectedGames.get(a.id)!;
       const gB = projectedGames.get(b.id)!;
-      if (gA !== gB) return gA - gB;
+      const tA = a.targetGames || 6;
+      const tB = b.targetGames || 6;
+
+      // 優先權 1: 尚未達標者優先 (Finished = false 排前面)
+      const finishedA = gA >= tA;
+      const finishedB = gB >= tB;
+      if (finishedA !== finishedB) {
+        return finishedA ? 1 : -1;
+      }
+
+
+
+
+
+      // 如果都未達標 -> 維持 Round Robin，場次少者優先
+      if (!finishedA) {
+        if (gA !== gB) return gA - gB;
+      } else {
+        // 如果都已達標 (加賽/湊人數階段)
+        // 優先權 2: 超額量 (Surplus) 少者優先 (由 +0 變 +1，優於 +1 變 +2)
+        const surplusA = gA - tA;
+        const surplusB = gB - tB;
+        if (surplusA !== surplusB) return surplusA - surplusB;
+
+        // 優先權 3: (若超額量相同) 目標場次 *多* 者優先 (體力好/預算多的人多打)
+        // 這避免 目標5場的人(G:5 T:5) 被抓去填補 目標7場的人(G:7 T:7) 的缺
+        if (tA !== tB) return tB - tA;
+      }
+
       return Math.random() - 0.5;
     });
 
@@ -1036,6 +1068,7 @@ const App: React.FC = () => {
               queuedPlayerIds={queuedPlayerIds}
               onDelete={deletePlayer}
               onUpdateLevel={updatePlayerLevel}
+              onUpdateTargetGames={updatePlayerTargetGames}
             />
             <div className="lg:hidden p-4 border-t border-slate-100 bg-slate-50 space-y-3 pb-8 shrink-0">
               {/* Footer actions cleared */}

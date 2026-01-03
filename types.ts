@@ -11,6 +11,7 @@ export interface Player {
   gender: Gender;
   level: number; // 1-15
   gamesPlayed: number;
+  targetGames?: number; // Default 6
 }
 
 export interface Match {
