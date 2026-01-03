@@ -466,6 +466,19 @@ const App: React.FC = () => {
     setEndingCourtId(null);
   };
 
+  const cancelMatch = (courtId: string) => {
+    const court = courts.find(c => c.id === courtId);
+    if (!court || !court.isActive) return;
+
+    const playersToReturn = court.players.filter(Boolean) as string[];
+
+    if (playersToReturn.length > 0) {
+      setMatchQueue(prev => [playersToReturn, ...prev]);
+    }
+
+    setCourts(prev => prev.map(c => c.id === courtId ? { ...c, players: [], isActive: false, startTime: undefined } : c));
+  };
+
   const assignMatchToCourt = (courtId: string, queueIndex: number = 0) => {
     if (matchQueue.length <= queueIndex) return;
 
@@ -1038,6 +1051,7 @@ const App: React.FC = () => {
                 busyPlayerIds={busyPlayerIds}
                 playingPlayerIds={playingPlayerIds}
                 onEndMatch={endMatch}
+                onCancelMatch={cancelMatch}
                 onSwapPlayer={swapActivePlayer}
                 onReplayBroadcast={replayBroadcast}
                 onRemoveCourt={removeCourt}

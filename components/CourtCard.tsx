@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Court, Player, Gender } from '../types';
+import { getAvatarLevelClasses } from '../utils/levelStyles';
 
 interface CourtCardProps {
   court: Court;
@@ -14,6 +15,8 @@ interface CourtCardProps {
   onUpdateName: (courtId: string, newName: string) => void;
   matchQueueCount: number;
   onAssignNext: () => void;
+  nextMatch: string[] | undefined;
+  onCancelMatch: (courtId: string) => void;
 }
 
 const MatchTimer: React.FC<{ startTime?: number }> = ({ startTime }) => {
@@ -35,7 +38,7 @@ const MatchTimer: React.FC<{ startTime?: number }> = ({ startTime }) => {
 };
 
 const CourtCard: React.FC<CourtCardProps> = ({
-  court, allPlayers, busyPlayerIds, playingPlayerIds, onEndMatch, onSwapPlayer, onReplayBroadcast, onRemoveCourt, onUpdateName, matchQueueCount, onAssignNext, nextMatch
+  court, allPlayers, busyPlayerIds, playingPlayerIds, onEndMatch, onSwapPlayer, onReplayBroadcast, onRemoveCourt, onUpdateName, matchQueueCount, onAssignNext, nextMatch, onCancelMatch
 }) => {
   const [swappingIdx, setSwappingIdx] = useState<number | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -160,7 +163,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
                 const p = allPlayers.find(x => x.id === pid);
                 return (
                   <div key={idx} className="bg-white/95 rounded-xl p-2 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-indigo-50 transition-all shadow-lg" onClick={() => setSwappingIdx(idx)}>
-                    <div className={`w-8 h-8 rounded-full mb-1 flex items-center justify-center font-black text-white text-xs ${p?.gender === Gender.FEMALE ? 'bg-pink-400' : 'bg-blue-400'}`}>{p?.name.charAt(0)}</div>
+                    <div className={`w-8 h-8 rounded-full mb-1 flex items-center justify-center font-black text-white text-xs ${p?.gender === Gender.FEMALE ? 'bg-pink-400' : 'bg-blue-400'} ${getAvatarLevelClasses(p?.level || 0)}`}>{p?.name.charAt(0)}</div>
                     <div className="font-bold text-slate-800 text-[10px] md:text-xs truncate w-full">{p?.name || '未知'}</div>
                     <div className="text-[8px] md:text-[10px] text-slate-500 font-bold hidden md:block">LV.{p?.level} | {p?.gamesPlayed}場</div>
                     <div className="text-[7px] text-slate-500 font-bold md:hidden">L{p?.level} {p?.gamesPlayed}場</div>
@@ -174,7 +177,20 @@ const CourtCard: React.FC<CourtCardProps> = ({
 
       <div className="p-4 bg-slate-50 border-t">
         {court.isActive && (
-          <button onClick={() => onEndMatch(court.id)} className="w-full py-3 bg-slate-800 text-white rounded-xl font-black shadow-lg hover:bg-slate-900 transition-all active:scale-95">結束比賽</button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                if (confirm('確定要取消這場比賽？球員將會回到隊列最前方。')) {
+                  onCancelMatch(court.id);
+                }
+              }}
+              className="px-4 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-200 transition-colors"
+              title="取消比賽並返回隊列"
+            >
+              取消
+            </button>
+            <button onClick={() => onEndMatch(court.id)} className="flex-1 py-3 bg-slate-800 text-white rounded-xl font-black shadow-lg hover:bg-slate-900 transition-all active:scale-95">結束比賽</button>
+          </div>
         )}
       </div>
     </div>

@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Player, Gender, MatchHistory, Court } from '../types';
+import { getAvatarLevelClasses } from '../utils/levelStyles';
 
 interface PlayerListProps {
   players: Player[];
@@ -153,7 +154,7 @@ const PlayerList: React.FC<PlayerListProps> = ({
             <div key={player.id} className={`flex flex-col p-4 rounded-xl border transition-all ${isPlaying ? 'bg-blue-50 border-blue-200 shadow-sm' : isQueued ? 'bg-amber-50 border-amber-200 shadow-sm' : 'bg-white border-slate-100'}`}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3 flex-1">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm flex-shrink-0 ${player.gender === Gender.FEMALE ? 'bg-pink-400' : 'bg-blue-400'}`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm flex-shrink-0 ${player.gender === Gender.FEMALE ? 'bg-pink-400' : 'bg-blue-400'} ${getAvatarLevelClasses(player.level)}`}>
                     {player.name.charAt(0)}
                   </div>
                   <div className="min-w-0">
