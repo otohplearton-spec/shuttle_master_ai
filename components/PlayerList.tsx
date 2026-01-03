@@ -121,7 +121,7 @@ const PlayerList: React.FC<PlayerListProps> = ({
           球友狀態 ({players.length})
         </div>
       </h2>
-      <div className="overflow-y-auto flex-1 space-y-2 pr-2 custom-scrollbar">
+      <div className="overflow-y-auto flex-1 space-y-2 pr-2 pb-40 custom-scrollbar">
         {players.length === 0 && <div className="text-center py-12 text-slate-400 text-sm">尚未加入球友</div>}
         {sortedPlayers.map((player) => {
           const isPlaying = playingPlayerIds.has(player.id);
