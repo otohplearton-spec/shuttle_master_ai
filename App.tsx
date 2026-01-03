@@ -1251,6 +1251,7 @@ const App: React.FC = () => {
           history={history}
           allPlayers={players}
           onClose={() => setShowHistoryModal(false)}
+          currentUser={currentUser}
         />
       )}
 

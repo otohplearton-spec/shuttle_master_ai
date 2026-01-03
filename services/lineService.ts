@@ -65,5 +65,31 @@ export const lineService = {
             console.error('Failed to get user profile', error);
             return null;
         }
+    },
+    /**
+     * Share a text message to LINE chats (Share Target Picker)
+     * @param text The text message to share
+     * @returns Promise<boolean> success status
+     */
+    shareMessage: async (text: string): Promise<boolean> => {
+        if (!liff.isLoggedIn()) return false;
+
+        if (!liff.isApiAvailable('shareTargetPicker')) {
+            console.warn('Share Target Picker is not available');
+            return false;
+        }
+
+        try {
+            const res = await liff.shareTargetPicker([
+                {
+                    type: 'text',
+                    text: text
+                }
+            ]);
+            return !!res;
+        } catch (error) {
+            console.error('Share failed', error);
+            return false;
+        }
     }
 };
