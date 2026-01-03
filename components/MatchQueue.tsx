@@ -95,12 +95,26 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
 
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <input
-              type="number"
-              value={roundsToSchedule}
-              onChange={(e) => setRoundsToSchedule(Math.max(1, parseInt(e.target.value) || 1))}
-              className="w-14 bg-white border border-slate-200 rounded-xl px-1 py-2 font-bold text-center text-indigo-600"
-            />
+            <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+              <button
+                onClick={() => setRoundsToSchedule(Math.max(1, roundsToSchedule - 1))}
+                className="w-9 h-9 flex items-center justify-center bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-indigo-600 font-bold active:scale-90 transition-all"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" /></svg>
+              </button>
+              <input
+                type="number"
+                value={roundsToSchedule}
+                onChange={(e) => setRoundsToSchedule(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-10 bg-transparent font-black text-lg text-center text-indigo-600 p-0 border-none focus:ring-0 mx-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [appearance:textfield]"
+              />
+              <button
+                onClick={() => setRoundsToSchedule(roundsToSchedule + 1)}
+                className="w-9 h-9 flex items-center justify-center bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-indigo-600 font-bold active:scale-90 transition-all"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>
+              </button>
+            </div>
             <div className="flex-1 flex gap-2">
               <button
                 onClick={handleNormalSchedule}
