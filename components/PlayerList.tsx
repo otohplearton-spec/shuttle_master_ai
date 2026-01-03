@@ -30,33 +30,54 @@ const PlayerList: React.FC<PlayerListProps> = ({
 }) => {
   const [selectedPlayerHistory, setSelectedPlayerHistory] = useState<string | null>(null);
 
-  // 動態計算「總計分配場次」
-  const getQueuedCount = (playerId: string) => {
-    let count = 0;
+  // 統一獲取該球員所有「進行中與排隊中」的比賽 (回傳 [team1, team2] 結構的陣列)
+  const getActiveMatchesForPlayer = (playerId: string) => {
+    const matches: { teams: string[][] }[] = [];
+
+    // 1. Active Courts
     courts.forEach(c => {
       if (c.isActive && c.players.includes(playerId)) {
-        count++;
+        matches.push({ teams: [[c.players[0], c.players[1]], [c.players[2], c.players[3]]] });
       }
     });
-    matchQueue.forEach(match => {
-      if (match.includes(playerId)) {
-        count++;
+
+    // 2. Queue
+    matchQueue.forEach(m => {
+      if (m.includes(playerId)) {
+        matches.push({ teams: [[m[0], m[1]], [m[2], m[3]]] });
       }
     });
-    return count;
+
+    return matches;
   };
 
-  // 獲取歷史數據
+  // 動態計算「總計分配場次」
+  const getQueuedCount = (playerId: string) => {
+    return getActiveMatchesForPlayer(playerId).length;
+  };
+
+  // 獲取歷史數據 (僅已完成)
   const getPlayerStats = (playerId: string) => {
     const partners = new Map<string, number>();
     const opponents = new Map<string, number>();
 
+    const add = (map: Map<string, number>, id: string) => {
+      if (!id) return;
+      map.set(id, (map.get(id) || 0) + 1);
+    };
+
+    const processMatch = (teams: string[][]) => {
+      const myTeam = teams.find(t => t.includes(playerId));
+      const otherTeam = teams.find(t => !t.includes(playerId));
+      myTeam?.forEach(p => { if (p !== playerId) add(partners, p); });
+      otherTeam?.forEach(p => { add(opponents, p); });
+    };
+
+    // 1. History
     history.forEach(match => {
-      if (!match.players.includes(playerId)) return;
-      const myTeam = match.teams.find(t => t.includes(playerId));
-      const otherTeam = match.teams.find(t => !t.includes(playerId));
-      myTeam?.forEach(p => { if (p !== playerId) partners.set(p, (partners.get(p) || 0) + 1); });
-      otherTeam?.forEach(p => { opponents.set(p, (opponents.get(p) || 0) + 1); });
+      if (match.players.includes(playerId)) {
+        processMatch(match.teams);
+      }
     });
 
     return {
@@ -70,36 +91,18 @@ const PlayerList: React.FC<PlayerListProps> = ({
     const partners = new Map<string, number>();
     const opponents = new Map<string, number>();
 
-    // 1. 檢查場地上進行中的
-    courts.forEach(c => {
-      if (c.isActive && c.players.includes(playerId)) {
-        const pIds = c.players;
-        const myTeamIdx = pIds.indexOf(playerId) < 2 ? [0, 1] : [2, 3];
-        const otherTeamIdx = pIds.indexOf(playerId) < 2 ? [2, 3] : [0, 1];
+    const add = (map: Map<string, number>, id: string) => {
+      if (!id) return;
+      map.set(id, (map.get(id) || 0) + 1);
+    };
 
-        myTeamIdx.forEach(idx => {
-          if (pIds[idx] !== playerId && pIds[idx]) partners.set(pIds[idx], (partners.get(pIds[idx]) || 0) + 1);
-        });
-        otherTeamIdx.forEach(idx => {
-          if (pIds[idx]) opponents.set(pIds[idx], (opponents.get(pIds[idx]) || 0) + 1);
-        });
-      }
-    });
-
-    // 2. 檢查隊列中的
-    matchQueue.forEach(match => {
-      if (match.includes(playerId)) {
-        const pIdx = match.indexOf(playerId);
-        const myTeamIdx = pIdx < 2 ? [0, 1] : [2, 3];
-        const otherTeamIdx = pIdx < 2 ? [2, 3] : [0, 1];
-
-        myTeamIdx.forEach(idx => {
-          if (match[idx] !== playerId && match[idx]) partners.set(match[idx], (partners.get(match[idx]) || 0) + 1);
-        });
-        otherTeamIdx.forEach(idx => {
-          if (match[idx]) opponents.set(match[idx], (opponents.get(match[idx]) || 0) + 1);
-        });
-      }
+    const activeMatches = getActiveMatchesForPlayer(playerId);
+    activeMatches.forEach(m => {
+      const teams = m.teams;
+      const myTeam = teams.find(t => t.includes(playerId));
+      const otherTeam = teams.find(t => !t.includes(playerId));
+      myTeam?.forEach(p => { if (p !== playerId) add(partners, p); });
+      otherTeam?.forEach(p => { add(opponents, p); });
     });
 
     return {
@@ -202,9 +205,16 @@ const PlayerList: React.FC<PlayerListProps> = ({
                     <div className="flex flex-col items-center border-l pl-3 group/target cursor-default">
                       <span className="text-slate-400 uppercase tracking-tighter">總進度</span>
                       <div className="flex items-center gap-0.5 relative">
-                        <span className={`text-sm font-black leading-none ${totalGames >= (player.targetGames || 6) ? 'text-emerald-600' : 'text-slate-700'}`}>
-                          {totalGames}
-                        </span>
+                        <div className="flex items-baseline gap-0.5">
+                          <span className={`text-sm font-black leading-none ${player.gamesPlayed >= (player.targetGames || 6) ? 'text-emerald-600' : 'text-slate-700'}`}>
+                            {player.gamesPlayed}
+                          </span>
+                          {totalAssignedCount > 0 && (
+                            <span className="text-[10px] font-bold text-amber-500">
+                              +{totalAssignedCount}
+                            </span>
+                          )}
+                        </div>
                         <span className="text-xs text-slate-300 font-light">/</span>
 
                         <div className="flex items-center gap-1">
@@ -301,12 +311,12 @@ const PlayerList: React.FC<PlayerListProps> = ({
 
                   {/* 歷史對戰紀錄 */}
                   <div className="p-3 bg-slate-50 rounded-xl border border-indigo-100">
-                    <h4 className="text-[10px] font-black text-indigo-600 uppercase mb-2">歷史戰績分析</h4>
+                    <h4 className="text-[10px] font-black text-indigo-600 uppercase mb-2">已經對戰 (History)</h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <span className="text-[9px] font-bold text-slate-400 block mb-1">最佳搭檔</span>
+                        <span className="text-[9px] font-bold text-slate-400 block mb-1">所有搭檔</span>
                         <div className="space-y-1">
-                          {getPlayerStats(player.id).partners.slice(0, 3).map(([id, count]) => (
+                          {getPlayerStats(player.id).partners.map(([id, count]) => (
                             <div key={id} className="text-[10px] flex justify-between">
                               <span className="text-slate-600 truncate mr-1">{players.find(p => p.id === id)?.name}</span>
                               <span className="font-black text-slate-400 flex-shrink-0">{count}次</span>
@@ -316,9 +326,9 @@ const PlayerList: React.FC<PlayerListProps> = ({
                         </div>
                       </div>
                       <div>
-                        <span className="text-[9px] font-bold text-slate-400 block mb-1">強勁對手</span>
+                        <span className="text-[9px] font-bold text-slate-400 block mb-1">所有對手</span>
                         <div className="space-y-1">
-                          {getPlayerStats(player.id).opponents.slice(0, 3).map(([id, count]) => (
+                          {getPlayerStats(player.id).opponents.map(([id, count]) => (
                             <div key={id} className="text-[10px] flex justify-between">
                               <span className="text-slate-600 truncate mr-1">{players.find(p => p.id === id)?.name}</span>
                               <span className="font-black text-slate-400 flex-shrink-0">{count}次</span>
