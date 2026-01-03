@@ -26,6 +26,9 @@ const App: React.FC = () => {
 
   // --- LIFF & Login Logic ---
   const [inPopupMode, setInPopupMode] = useState(false);
+  const [popupProfile, setPopupProfile] = useState<UserProfile | null>(null);
+  const [popupStatus, setPopupStatus] = useState<string>('Initializing...');
+  const [popupError, setPopupError] = useState<string | null>(null);
 
   useEffect(() => {
     const initLiff = async () => {
@@ -35,21 +38,41 @@ const App: React.FC = () => {
 
       if (isPopupMode) {
         setInPopupMode(true);
+        setPopupStatus('Checking Environment...');
       }
 
       try {
+        setPopupStatus('Starting LIFF Service...');
         const isLoggedIn = await lineService.init();
 
         // 1. Popup Logic
         if (isPopupMode) {
+          setPopupStatus('Verifying Login Status...');
           if (isLoggedIn) {
-            // Success! Send back to opener
-            const profile = await lineService.getProfile();
-            if (window.opener) {
-              window.opener.postMessage({ type: 'LINE_LOGIN_SUCCESS', user: profile }, window.location.origin);
-              window.close();
+            setPopupStatus('Fetching User Profile...');
+            // Success! Send back to opener or show manual copy
+            try {
+              const profile = await lineService.getProfile();
+              if (profile) {
+                setPopupProfile(profile);
+                if (window.opener) {
+                  setPopupStatus('Syncing with App...');
+                  window.opener.postMessage({ type: 'LINE_LOGIN_SUCCESS', user: profile }, window.location.origin);
+                  setTimeout(() => {
+                    window.close();
+                  }, 1000);
+                } else {
+                  // Manual Copy Mode
+                  setPopupStatus('Ready for Manual Copy');
+                }
+              } else {
+                throw new Error("Profile is empty");
+              }
+            } catch (e: any) {
+              setPopupError("Failed to fetch profile: " + e.message);
             }
           } else {
+            setPopupStatus('Redirecting to LINE...');
             // Not logged in yet? Redirect to LINE Login immediately inside the popup
             // IMPORTANT: Pass clean redirect URI with our check param
             const cleanRedirectUri = window.location.origin + '?line_login_check=true';
@@ -79,16 +102,18 @@ const App: React.FC = () => {
             });
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("LIFF Init Error:", error);
-        if (isPopupMode) window.close(); // Close if error in popup
+        if (isPopupMode) {
+          setPopupError("LIFF Init Failed: " + (error?.message || JSON.stringify(error)));
+        }
       }
     };
     initLiff();
 
     // Listener for PWA (Main Window) to receive login data from popup
     const handleMessage = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return;
+      if (event.origin !== window.location.origin) return; // Basic security
       if (event.data?.type === 'LINE_LOGIN_SUCCESS' && event.data?.user) {
         const profile = event.data.user;
         setCurrentUser(profile);
@@ -111,12 +136,53 @@ const App: React.FC = () => {
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  // If in popup mode, just render a loading screen to avoid double app logic
+  // Popup Mode UI (Loader or Copy Screen)
   if (inPopupMode) {
+    if (popupError) {
+      return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-red-50 p-6 text-center">
+          <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center text-2xl mb-4 font-bold">!</div>
+          <h2 className="text-xl font-black text-red-700 mb-2">Login Error</h2>
+          <p className="text-red-500 text-sm mb-6 break-all">{popupError}</p>
+          <a href="/" className="px-6 py-3 bg-white border border-red-200 text-red-600 font-bold rounded-xl shadow-sm">
+            Back to Home
+          </a>
+        </div>
+      );
+    }
+
+    if (popupProfile) {
+      const loginStepStr = JSON.stringify(popupProfile);
+      const handleCopy = () => {
+        navigator.clipboard.writeText(loginStepStr).then(() => alert('已複製！請回到 App 貼上。'));
+      };
+
+      return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6 text-center space-y-6 animate-in fade-in duration-500">
+          <div className="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-4xl mb-2 shadow-emerald-200 shadow-xl">✓</div>
+          <h1 className="text-3xl font-black text-slate-800">登入成功！</h1>
+          <p className="text-slate-500 font-bold leading-relaxed text-sm">
+            由於 iOS 系統隔離限制<br />無法自動跳回 PWA App
+          </p>
+          <div className="w-full bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+            <p className="text-xs text-slate-400 mb-2">請點擊下方按鈕複製金鑰</p>
+            <button
+              onClick={handleCopy}
+              className="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-indigo-500/30 shadow-lg hover:bg-indigo-700 active:scale-95 transition-all text-lg flex items-center justify-center gap-2"
+            >
+              📋 複製登入金鑰
+            </button>
+            <p className="text-[10px] text-slate-300 mt-2">然後切換回 App 手動貼上即可</p>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-slate-500 font-bold">Connecting to LINE...</p>
+        <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-slate-500 font-bold animate-pulse">{popupStatus}</p>
+        <p className="text-xs text-slate-300 mt-2 fixed bottom-10">Processing Secure Login...</p>
       </div>
     );
   }
