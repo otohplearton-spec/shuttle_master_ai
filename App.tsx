@@ -398,6 +398,10 @@ const App: React.FC = () => {
     setPlayers(prev => prev.map(p => p.id === id ? { ...p, targetGames: Math.max(1, newTarget) } : p));
   };
 
+  const togglePlayerPause = (id: string) => {
+    setPlayers(prev => prev.map(p => p.id === id ? { ...p, isPaused: !p.isPaused } : p));
+  };
+
   const deletePlayer = (id: string) => {
     if (busyPlayerIds.has(id)) {
       alert("該球友正在比賽或排隊中，請先從名單移除再刪除！");
@@ -568,7 +572,7 @@ const App: React.FC = () => {
   const generateSmartRound = (currentPlayers: Player[], currentHistory: MatchHistory[], queueSoFar: string[][]): string[] | null => {
     // 智慧排點不再排除正在場上的球員，而是將他們一併納入考量
     // 但會透過 projectedGames 增加場次權重，避免他們如果正在打，還被排在很前面
-    const available = currentPlayers;
+    const available = currentPlayers.filter(p => !p.isPaused);
     if (available.length < 4) return null;
 
     const projectedGames = new Map<string, number>();
@@ -675,7 +679,7 @@ const App: React.FC = () => {
     }
     setIsScheduling(true);
     try {
-      const candidatePlayers = players.filter(p => !playingPlayerIds.has(p.id));
+      const candidatePlayers = players.filter(p => !playingPlayerIds.has(p.id) && !p.isPaused);
       const suggestedRounds = await geminiService.suggestPairings(candidatePlayers, history, roundsRequested, matchQueue);
       if (suggestedRounds.length > 0) setMatchQueue(prev => [...prev, ...suggestedRounds]);
     } catch (error: any) {
@@ -1069,6 +1073,7 @@ const App: React.FC = () => {
               onDelete={deletePlayer}
               onUpdateLevel={updatePlayerLevel}
               onUpdateTargetGames={updatePlayerTargetGames}
+              onTogglePause={togglePlayerPause}
             />
             <div className="lg:hidden p-4 border-t border-slate-100 bg-slate-50 space-y-3 pb-8 shrink-0">
               {/* Footer actions cleared */}

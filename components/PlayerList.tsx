@@ -13,6 +13,7 @@ interface PlayerListProps {
   onDelete: (id: string) => void;
   onUpdateLevel: (id: string, newLevel: number) => void;
   onUpdateTargetGames: (id: string, newTarget: number) => void;
+  onTogglePause: (id: string) => void;
 }
 
 const PlayerList: React.FC<PlayerListProps> = ({
@@ -24,7 +25,8 @@ const PlayerList: React.FC<PlayerListProps> = ({
   queuedPlayerIds,
   onDelete,
   onUpdateLevel,
-  onUpdateTargetGames
+  onUpdateTargetGames,
+  onTogglePause
 }) => {
   const [selectedPlayerHistory, setSelectedPlayerHistory] = useState<string | null>(null);
 
@@ -152,8 +154,10 @@ const PlayerList: React.FC<PlayerListProps> = ({
 
           const nextMatchInfo = getNextMatch(player.id);
 
+          const isPaused = player.isPaused;
+
           return (
-            <div key={player.id} className={`flex flex-col p-4 rounded-xl border transition-all ${isPlaying ? 'bg-blue-50 border-blue-200 shadow-sm' : isQueued ? 'bg-amber-50 border-amber-200 shadow-sm' : 'bg-white border-slate-100'}`}>
+            <div key={player.id} className={`flex flex-col p-4 rounded-xl border transition-all ${isPaused ? 'bg-slate-50 border-slate-100 opacity-60 grayscale-[0.8]' : isPlaying ? 'bg-blue-50 border-blue-200 shadow-sm' : isQueued ? 'bg-amber-50 border-amber-200 shadow-sm' : 'bg-white border-slate-100'}`}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3 flex-1">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm flex-shrink-0 ${player.gender === Gender.FEMALE ? 'bg-pink-400' : 'bg-blue-400'} ${getAvatarLevelClasses(player.level)}`}>
@@ -162,13 +166,20 @@ const PlayerList: React.FC<PlayerListProps> = ({
                   <div className="min-w-0">
                     <div className="font-bold text-slate-800 flex items-center gap-2">
                       <span className="truncate">{player.name}</span>
-                      <span className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase tracking-tighter ${isPlaying ? 'bg-blue-600 text-white' : isQueued ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-500'}`}>
-                        {isPlaying ? '對戰中' : isQueued ? '排隊中' : '休息中'}
+                      <span className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase tracking-tighter ${isPaused ? 'bg-slate-200 text-slate-500' : isPlaying ? 'bg-blue-600 text-white' : isQueued ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                        {isPaused ? '暫離中' : isPlaying ? '對戰中' : isQueued ? '排隊中' : '休息中'}
                       </span>
                     </div>
                   </div>
                 </div>
                 <div className="flex gap-1">
+                  <button onClick={() => onTogglePause(player.id)} className={`p-2 transition-colors rounded-lg ${isPaused ? 'text-slate-500 hover:text-green-600 bg-slate-200 hover:bg-green-100' : 'text-slate-300 hover:text-amber-500'}`} title={isPaused ? "點擊歸隊" : "暫停排程(暫離)"}>
+                    {isPaused ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+                    )}
+                  </button>
                   <button onClick={() => setSelectedPlayerHistory(selectedPlayerHistory === player.id ? null : player.id)} className={`p-2 transition-colors rounded-lg ${selectedPlayerHistory === player.id ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-indigo-600'}`}>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
                   </button>

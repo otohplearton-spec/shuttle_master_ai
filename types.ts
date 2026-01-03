@@ -12,6 +12,7 @@ export interface Player {
   level: number; // 1-15
   gamesPlayed: number;
   targetGames?: number; // Default 6
+  isPaused?: boolean;
 }
 
 export interface Match {
