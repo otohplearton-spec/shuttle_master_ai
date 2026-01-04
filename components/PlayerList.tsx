@@ -116,7 +116,7 @@ const PlayerList: React.FC<PlayerListProps> = ({
   const sortedPlayers = players;
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex-1 overflow-hidden flex flex-col">
+    <div className="bg-white p-3 md:p-6 rounded-2xl shadow-sm border border-slate-200 flex-1 overflow-hidden flex flex-col">
       <h2 className="text-xl font-bold mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="w-8 h-8 bg-green-100 text-green-600 rounded-lg flex items-center justify-center">
@@ -156,7 +156,7 @@ const PlayerList: React.FC<PlayerListProps> = ({
           const isPaused = player.isPaused;
 
           return (
-            <div key={player.id} className={`flex flex-col p-4 rounded-xl border transition-all ${isPaused ? 'bg-slate-50 border-slate-100 opacity-60 grayscale-[0.8]' : isPlaying ? 'bg-blue-50 border-blue-200 shadow-sm' : isQueued ? 'bg-amber-50 border-amber-200 shadow-sm' : 'bg-white border-slate-100'}`}>
+            <div key={player.id} className={`flex flex-col p-3 md:p-4 rounded-xl border transition-all ${isPaused ? 'bg-slate-50 border-slate-100 opacity-60 grayscale-[0.8]' : isPlaying ? 'bg-blue-50 border-blue-200 shadow-sm' : isQueued ? 'bg-amber-50 border-amber-200 shadow-sm' : 'bg-white border-slate-100'}`}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3 flex-1">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm flex-shrink-0 ${player.gender === Gender.FEMALE ? 'bg-pink-400' : 'bg-blue-400'} ${getAvatarLevelClasses(player.level)}`}>
@@ -164,7 +164,7 @@ const PlayerList: React.FC<PlayerListProps> = ({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="font-bold text-slate-800 text-base truncate mb-0.5">{player.name}</div>
-                    <span className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase tracking-tighter inline-block ${isPaused ? 'bg-slate-200 text-slate-500' : isPlaying ? 'bg-blue-600 text-white' : isQueued ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-black uppercase tracking-tighter inline-block ${isPaused ? 'bg-slate-200 text-slate-500' : isPlaying ? 'bg-blue-600 text-white' : isQueued ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-500'}`}>
                       {isPaused ? '暫離中' : isPlaying ? '對戰中' : isQueued ? '排隊中' : '休息中'}
                     </span>
                   </div>
@@ -187,7 +187,7 @@ const PlayerList: React.FC<PlayerListProps> = ({
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
-                    <span className="font-semibold text-slate-400 text-[10px] uppercase">LV</span>
+                    <span className="font-semibold text-slate-400 text-xs uppercase">LV</span>
                     <button onClick={() => onUpdateLevel(player.id, player.level - 1)} className="w-5 h-5 flex items-center justify-center bg-white border border-slate-200 rounded text-slate-500">-</button>
                     <span className="w-4 text-center font-bold text-slate-700 text-xs">{player.level}</span>
                     <button onClick={() => onUpdateLevel(player.id, player.level + 1)} className="w-5 h-5 flex items-center justify-center bg-white border border-slate-200 rounded text-slate-500">+</button>
@@ -249,25 +249,25 @@ const PlayerList: React.FC<PlayerListProps> = ({
                   {/* 下一場對戰詳情 */}
                   {nextMatchInfo && (
                     <div className="p-3 bg-indigo-50/50 rounded-xl border border-indigo-200">
-                      <h4 className="text-[10px] font-black text-indigo-700 uppercase mb-2 flex items-center justify-between">
+                      <h4 className="text-xs font-black text-indigo-700 uppercase mb-2 flex items-center justify-between">
                         <span className="flex items-center gap-1">
                           <span className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce"></span>
                           即將上場 (Next Match)
                         </span>
-                        <span className="bg-indigo-600 text-white px-2 py-0.5 rounded text-[9px]">
+                        <span className="bg-indigo-600 text-white px-2 py-0.5 rounded text-xs">
                           Round {nextMatchInfo.roundNumber}
                         </span>
                       </h4>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <span className="text-[9px] font-bold text-indigo-600/70 block mb-1">搭檔</span>
-                          <div className="text-[10px] font-bold text-slate-700">
+                          <span className="text-[0.7rem] font-bold text-indigo-600/70 block mb-1">搭檔</span>
+                          <div className="text-xs font-bold text-slate-700">
                             {nextMatchInfo.partner?.name || <span className="text-slate-400 italic">空缺</span>}
                           </div>
                         </div>
                         <div>
-                          <span className="text-[9px] font-bold text-indigo-600/70 block mb-1">對手</span>
-                          <div className="text-[10px] font-bold text-slate-700">
+                          <span className="text-[0.7rem] font-bold text-indigo-600/70 block mb-1">對手</span>
+                          <div className="text-xs font-bold text-slate-700">
                             {nextMatchInfo.opponents.map(p => p?.name).filter(Boolean).join(' & ') || <span className="text-slate-400 italic">空缺</span>}
                           </div>
                         </div>
@@ -278,16 +278,16 @@ const PlayerList: React.FC<PlayerListProps> = ({
                   {/* 預計對戰 (累積統計) */}
                   {totalAssignedCount > 0 && (
                     <div className="p-3 bg-amber-50/50 rounded-xl border border-amber-200">
-                      <h4 className="text-[10px] font-black text-amber-700 uppercase mb-2 flex items-center gap-1">
+                      <h4 className="text-xs font-black text-amber-700 uppercase mb-2 flex items-center gap-1">
                         <span className="w-1 h-1 bg-amber-500 rounded-full animate-ping"></span>
                         預計對戰 (已排隊)
                       </h4>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <span className="text-[9px] font-bold text-amber-600/70 block mb-1">預計搭檔</span>
+                          <span className="text-[0.7rem] font-bold text-amber-600/70 block mb-1">預計搭檔</span>
                           <div className="space-y-1">
                             {getUpcomingStats(player.id).partners.map(([id, count]) => (
-                              <div key={id} className="text-[10px] flex justify-between">
+                              <div key={id} className="text-xs flex justify-between">
                                 <span className="text-slate-600 truncate mr-1 font-bold">{players.find(p => p.id === id)?.name}</span>
                                 <span className="font-black text-amber-600/50 flex-shrink-0">{count}次</span>
                               </div>
@@ -295,10 +295,10 @@ const PlayerList: React.FC<PlayerListProps> = ({
                           </div>
                         </div>
                         <div>
-                          <span className="text-[9px] font-bold text-amber-600/70 block mb-1">預計對手</span>
+                          <span className="text-[0.7rem] font-bold text-amber-600/70 block mb-1">預計對手</span>
                           <div className="space-y-1">
                             {getUpcomingStats(player.id).opponents.map(([id, count]) => (
-                              <div key={id} className="text-[10px] flex justify-between">
+                              <div key={id} className="text-xs flex justify-between">
                                 <span className="text-slate-600 truncate mr-1 font-bold">{players.find(p => p.id === id)?.name}</span>
                                 <span className="font-black text-amber-600/50 flex-shrink-0">{count}次</span>
                               </div>
@@ -311,30 +311,30 @@ const PlayerList: React.FC<PlayerListProps> = ({
 
                   {/* 歷史對戰紀錄 */}
                   <div className="p-3 bg-slate-50 rounded-xl border border-indigo-100">
-                    <h4 className="text-[10px] font-black text-indigo-600 uppercase mb-2">已經對戰 (History)</h4>
+                    <h4 className="text-xs font-black text-indigo-600 uppercase mb-2">已經對戰 (History)</h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <span className="text-[9px] font-bold text-slate-400 block mb-1">所有搭檔</span>
+                        <span className="text-[0.7rem] font-bold text-slate-400 block mb-1">所有搭檔</span>
                         <div className="space-y-1">
                           {getPlayerStats(player.id).partners.map(([id, count]) => (
-                            <div key={id} className="text-[10px] flex justify-between">
+                            <div key={id} className="text-xs flex justify-between">
                               <span className="text-slate-600 truncate mr-1">{players.find(p => p.id === id)?.name}</span>
                               <span className="font-black text-slate-400 flex-shrink-0">{count}次</span>
                             </div>
                           ))}
-                          {getPlayerStats(player.id).partners.length === 0 && <span className="text-[9px] text-slate-300 italic">尚無數據</span>}
+                          {getPlayerStats(player.id).partners.length === 0 && <span className="text-[0.7rem] text-slate-300 italic">尚無數據</span>}
                         </div>
                       </div>
                       <div>
-                        <span className="text-[9px] font-bold text-slate-400 block mb-1">所有對手</span>
+                        <span className="text-[0.7rem] font-bold text-slate-400 block mb-1">所有對手</span>
                         <div className="space-y-1">
                           {getPlayerStats(player.id).opponents.map(([id, count]) => (
-                            <div key={id} className="text-[10px] flex justify-between">
+                            <div key={id} className="text-xs flex justify-between">
                               <span className="text-slate-600 truncate mr-1">{players.find(p => p.id === id)?.name}</span>
                               <span className="font-black text-slate-400 flex-shrink-0">{count}次</span>
                             </div>
                           ))}
-                          {getPlayerStats(player.id).opponents.length === 0 && <span className="text-[9px] text-slate-300 italic">尚無數據</span>}
+                          {getPlayerStats(player.id).opponents.length === 0 && <span className="text-[0.7rem] text-slate-300 italic">尚無數據</span>}
                         </div>
                       </div>
                     </div>

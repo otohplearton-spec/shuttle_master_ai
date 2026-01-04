@@ -66,7 +66,7 @@ const MatchHistoryList: React.FC<MatchHistoryListProps> = ({ history, allPlayers
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-                <div className="p-6 border-b flex items-center justify-between bg-slate-50">
+                <div className="p-4 md:p-6 border-b flex items-center justify-between bg-slate-50">
                     <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
                         <span className="text-2xl">📜</span> 對戰歷史紀錄
                     </h2>
@@ -97,7 +97,7 @@ const MatchHistoryList: React.FC<MatchHistoryListProps> = ({ history, allPlayers
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-3 custom-scrollbar">
                     {history.length === 0 ? (
                         <div className="text-center py-20 text-slate-400 italic">尚未有對戰紀錄</div>
                     ) : (
@@ -112,23 +112,23 @@ const MatchHistoryList: React.FC<MatchHistoryListProps> = ({ history, allPlayers
                             const diff = Math.abs(lv1 - lv2);
 
                             return (
-                                <div key={match.timestamp} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-lg flex items-center gap-2">
-                                            <span>#{history.length - idx} • {timeStr}</span>
+                                <div key={match.timestamp} className="bg-white border border-slate-100 rounded-2xl p-3 md:p-4 shadow-sm hover:shadow-md transition-shadow">
+                                    <div className="flex flex-wrap items-center justify-between mb-3 gap-1.5">
+                                        <div className="flex flex-wrap items-center gap-1.5 w-full">
+                                            <span className="text-xs md:text-sm font-bold text-slate-500 bg-slate-100 px-1.5 py-1 rounded-lg">
+                                                #{history.length - idx} • {timeStr}
+                                            </span>
                                             {match.duration && (
-                                                <span className="text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 flex items-center gap-1">
+                                                <span className="text-xs md:text-sm font-bold text-indigo-600 bg-indigo-50 px-1.5 py-1 rounded-lg border border-indigo-100 flex items-center gap-1">
                                                     <span>⏱</span>
                                                     <span>{Math.floor(match.duration / 60)}m {match.duration % 60}s</span>
                                                 </span>
                                             )}
-                                        </span>
-                                        <div className="flex gap-2">
-                                            <span className={`text-xs font-bold px-2 py-1 rounded-lg ${diff <= 2 ? 'bg-emerald-50 text-emerald-600' : diff >= 5 ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'}`}>
+                                            <span className={`text-xs md:text-sm font-bold px-1.5 py-1 rounded-lg ${diff <= 2 ? 'bg-emerald-50 text-emerald-600' : diff >= 5 ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'}`}>
                                                 強度差: {diff}
                                             </span>
                                             {match.score && (
-                                                <span className="text-xs font-black px-2 py-1 rounded-lg bg-slate-800 text-white shadow-sm flex items-center gap-1">
+                                                <span className="text-xs md:text-sm font-black px-1.5 py-1 rounded-lg bg-slate-800 text-white shadow-sm flex items-center gap-1">
                                                     <span>🏆</span>
                                                     <span>{match.score[0]} : {match.score[1]}</span>
                                                 </span>

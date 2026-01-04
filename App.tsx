@@ -279,8 +279,8 @@ const App: React.FC = () => {
   });
 
   const [isScheduling, setIsScheduling] = useState(false);
-  // Mobile View Mode: 'none' | 'menu' | 'players'
-  const [activeMobileView, setActiveMobileView] = useState<'none' | 'menu' | 'players'>('none');
+  // Mobile View Mode: 'none' | 'menu' | 'players' | 'queue'
+  const [activeMobileView, setActiveMobileView] = useState<'none' | 'menu' | 'players' | 'queue'>('none');
   const [showImportModal, setShowImportModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [resetStep, setResetStep] = useState(0);
@@ -478,6 +478,7 @@ const App: React.FC = () => {
       ]);
 
       setIsSessionActive(false);
+      setActiveMobileView('none');
       setResetStep(0);
     }
   };
@@ -1039,15 +1040,16 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 p-4 md:p-8 flex flex-col items-center">
-      <div className="w-full max-w-[1700px]">
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div className="h-[100dvh] bg-slate-100 text-slate-900 md:p-8 flex flex-col items-center overflow-hidden">
+      <div className="w-full max-w-[1700px] flex flex-col h-full">
+        <header className="flex-shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 md:mb-8 pt-4 md:pt-0 px-4 md:px-0">
           <div className="flex items-center gap-4">
             {/* Use Avatar */}
+            {/* Use Avatar */}
             {currentUser.pictureUrl ? (
-              <img src={currentUser.pictureUrl} alt={currentUser.displayName} className="w-12 h-12 rounded-full border-2 border-white shadow-md hidden md:block" />
+              <img src={currentUser.pictureUrl} alt={currentUser.displayName} className="w-12 h-12 rounded-full border-2 border-white shadow-md hidden lg:block" />
             ) : (
-              <div className="w-12 h-12 rounded-full bg-indigo-500 hidden md:flex items-center justify-center text-xl text-white font-bold shadow-md">
+              <div className="w-12 h-12 rounded-full bg-indigo-500 hidden lg:flex items-center justify-center text-xl text-white font-bold shadow-md">
                 {currentUser.displayName.charAt(0)}
               </div>
             )}
@@ -1057,8 +1059,8 @@ const App: React.FC = () => {
               </h1>
               <div className="flex items-center gap-2">
                 <p className="text-slate-400 font-bold tracking-widest text-xs uppercase">Centralized Smart Queue System</p>
-                <span className="hidden md:inline-block w-1 h-1 bg-slate-300 rounded-full"></span>
-                <p className="hidden md:block text-slate-500 text-xs font-bold">Hi, {currentUser.displayName}</p>
+                <span className="hidden lg:inline-block w-1 h-1 bg-slate-300 rounded-full"></span>
+                <p className="hidden lg:block text-slate-500 text-xs font-bold">Hi, {currentUser.displayName}</p>
                 {currentUser.isPro && (
                   <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md ml-2 shadow-sm border border-amber-200 tracking-wider">
                     PRO
@@ -1112,7 +1114,16 @@ const App: React.FC = () => {
               </button>
             </div>
 
-            {/* Mobile Players Button (Restored) */}
+            {/* Mobile Menu Button (Docked) */}
+            <button
+              onClick={() => setActiveMobileView('menu')}
+              className="lg:hidden p-2 rounded-xl bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all mr-2"
+              aria-label="Menu"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
             <button
               onClick={() => setActiveMobileView('players')}
               className="lg:hidden p-2 rounded-xl bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all mr-2"
@@ -1124,14 +1135,16 @@ const App: React.FC = () => {
             </button>
 
             <button
-              onClick={() => setActiveMobileView('menu')}
-              className="lg:hidden p-2 rounded-xl bg-white text-slate-600 shadow-sm border-2 border-slate-200 hover:bg-slate-50 transition-all"
-              aria-label="Menu"
+              onClick={() => setActiveMobileView('queue')}
+              className="lg:hidden p-2 rounded-xl bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all"
+              aria-label="Queue"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </button>
+
+
 
             <button
               onClick={handleLogout}
@@ -1168,7 +1181,7 @@ const App: React.FC = () => {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start relative">
+        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-6 relative px-4 md:px-0 pb-4 md:pb-0 overflow-hidden">
           {/* Mobile Sidebar Overlay */}
           {activeMobileView !== 'none' && (
             <div
@@ -1178,23 +1191,45 @@ const App: React.FC = () => {
           )}
 
           {/* Left Column: Player Management (Sidebar on Mobile) */}
+          {/* Left Column: Mobile Sidebar (Fixed Drawer) */}
           <div className={`
-            lg:col-span-3 flex-col gap-6 h-full lg:min-h-[850px] transition-transform duration-300 ease-in-out
-            ${activeMobileView !== 'none' ? 'fixed inset-0 h-[100dvh] z-50 w-full bg-slate-100 p-4 shadow-2xl overflow-hidden flex' : 'hidden lg:flex'}
+            lg:hidden flex flex-col gap-6 h-full transition-transform duration-300 ease-in-out
+            fixed inset-0 z-50 w-full bg-slate-100 p-4 shadow-2xl overflow-hidden
+            ${(activeMobileView === 'menu' || activeMobileView === 'players') ? 'translate-x-0' : '-translate-x-full'}
           `}>
             {/* Header for Mobile Sidebar */}
-            {activeMobileView !== 'none' && (
-              <div className="lg:hidden flex justify-between items-center mb-4 shrink-0 border-b border-slate-200 pb-4">
-                <h3 className="font-black text-2xl text-slate-800">
-                  {activeMobileView === 'menu' ? 'Menu' : '👥 球員管理'}
-                </h3>
-                <button onClick={() => setActiveMobileView('none')} className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold">✕</button>
-              </div>
-            )}
+            <div className="flex justify-between items-center mb-4 shrink-0 border-b border-slate-200 pb-4">
+              <h3 className="font-black text-2xl text-slate-800">
+                {activeMobileView === 'menu' ? 'Menu' : '👥 球員管理'}
+              </h3>
+              <button onClick={() => setActiveMobileView('none')} className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold">✕</button>
+            </div>
 
             {/* CONTENT: SYSTEM MENU (Only show if view is 'menu') */}
             {(activeMobileView === 'menu') && (
-              <div className="lg:hidden space-y-4 shrink-0 overflow-y-auto flex-1">
+              <div className="space-y-4 shrink-0 overflow-y-auto flex-1 pb-24 custom-scrollbar">
+                {/* User Profile Card in Menu */}
+                <div className="bg-white p-4 rounded-2xl border border-indigo-100 shadow-sm flex items-center gap-4">
+                  {currentUser.pictureUrl ? (
+                    <img src={currentUser.pictureUrl} alt={currentUser.displayName} className="w-14 h-14 rounded-full border-2 border-indigo-100 shadow-sm" />
+                  ) : (
+                    <div className="w-14 h-14 rounded-full bg-indigo-500 flex items-center justify-center text-2xl text-white font-bold shadow-sm">
+                      {currentUser.displayName.charAt(0)}
+                    </div>
+                  )}
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2">
+                      <span className="font-black text-lg text-slate-800">{currentUser.displayName}</span>
+                      {currentUser.isPro && (
+                        <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md shadow-sm border border-amber-200 tracking-wider">
+                          PRO
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs text-slate-400 font-bold">已登入</span>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
                     <div className="flex items-center gap-3">
@@ -1270,171 +1305,202 @@ const App: React.FC = () => {
               </div>
             )}
 
-            {/* CONTENT: PLAYERS (Show if view is 'players' OR on Desktop) */}
-            <div className={`${(activeMobileView === 'menu') ? 'hidden' : 'flex'} flex-col gap-6 h-full overflow-hidden lg:flex`}>
-              <div className="flex gap-3 mb-2 shrink-0">
-                <div className="flex-1">
-                  <AddPlayerForm onAdd={addPlayer} />
+            {/* CONTENT: PLAYERS (Mobile Only) */}
+            {(activeMobileView === 'players') && (
+              <div className="flex flex-col gap-6 h-full overflow-hidden">
+                <div className="flex gap-3 mb-2 shrink-0">
+                  <div className="flex-1">
+                    <AddPlayerForm onAdd={addPlayer} />
+                  </div>
+                  <button
+                    onClick={() => setShowImportModal(true)}
+                    className="flex-1 py-4 rounded-2xl border-2 border-dashed border-indigo-300 text-indigo-500 font-bold hover:bg-indigo-50 hover:border-indigo-500 hover:text-indigo-700 transition-all flex items-center justify-center gap-2 group"
+                  >
+                    <span className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 group-hover:scale-110 transition-all text-xl">📋</span>
+                    <span>批次匯入</span>
+                  </button>
                 </div>
-                <button
-                  onClick={() => setShowImportModal(true)}
-                  className="flex-1 py-4 rounded-2xl border-2 border-dashed border-indigo-300 text-indigo-500 font-bold hover:bg-indigo-50 hover:border-indigo-500 hover:text-indigo-700 transition-all flex items-center justify-center gap-2 group"
-                >
-                  <span className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 group-hover:scale-110 transition-all text-xl">📋</span>
-                  <span>批次匯入</span>
-                </button>
+                <PlayerList
+                  players={players}
+                  courts={courts}
+                  matchQueue={matchQueue}
+                  history={history}
+                  playingPlayerIds={playingPlayerIds}
+                  queuedPlayerIds={queuedPlayerIds}
+                  onDelete={deletePlayer}
+                  onUpdateLevel={updatePlayerLevel}
+                  onUpdateTargetGames={updatePlayerTargetGames}
+                  onTogglePause={togglePlayerPause}
+                />
               </div>
-              <PlayerList
-                players={players}
-                courts={courts}
-                matchQueue={matchQueue}
-                history={history}
-                playingPlayerIds={playingPlayerIds}
-                queuedPlayerIds={queuedPlayerIds}
-                onDelete={deletePlayer}
-                onUpdateLevel={updatePlayerLevel}
-                onUpdateTargetGames={updatePlayerTargetGames}
-                onTogglePause={togglePlayerPause}
-              />
-              {/* Mobile Font Size Control Removed from footer (moved to top) */}
-            </div>
+            )}
           </div>
 
+          {/* Left Column: Desktop Sidebar (Static) */}
+          <div className="hidden lg:col-span-3 lg:flex flex-col gap-6 h-full overflow-hidden">
+            <div className="flex gap-3 mb-2 shrink-0">
+              <div className="flex-1">
+                <AddPlayerForm onAdd={addPlayer} />
+              </div>
+              <button
+                onClick={() => setShowImportModal(true)}
+                className="flex-1 py-4 rounded-2xl border-2 border-dashed border-indigo-300 text-indigo-500 font-bold hover:bg-indigo-50 hover:border-indigo-500 hover:text-indigo-700 transition-all flex items-center justify-center gap-2 group"
+              >
+                <span className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 group-hover:scale-110 transition-all text-xl">📋</span>
+                <span>批次匯入</span>
+              </button>
+            </div>
+            <PlayerList
+              players={players}
+              courts={courts}
+              matchQueue={matchQueue}
+              history={history}
+              playingPlayerIds={playingPlayerIds}
+              queuedPlayerIds={queuedPlayerIds}
+              onDelete={deletePlayer}
+              onUpdateLevel={updatePlayerLevel}
+              onUpdateTargetGames={updatePlayerTargetGames}
+              onTogglePause={togglePlayerPause}
+            />
+          </div>
 
-          <div className={`lg:col-span-6 grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-6`}>
-            {courts.map(court => (
-              <CourtCard
-                key={court.id}
-                court={court}
-                allPlayers={players}
-                busyPlayerIds={busyPlayerIds}
-                playingPlayerIds={playingPlayerIds}
-                onEndMatch={endMatch}
-                onCancelMatch={cancelMatch}
-                onSwapPlayer={swapActivePlayer}
-                onReplayBroadcast={replayBroadcast}
-                onRemoveCourt={removeCourt}
-                onUpdateName={updateCourtName}
-                matchQueueCount={matchQueue.length}
-                nextMatch={matchQueue[0]} // For visual indication
-                onAssignNext={() => {
-                  const validIndex = matchQueue.findIndex(match => !match.some(id => playingPlayerIds.has(id)));
+          <div className={`lg:col-span-6 h-full flex flex-col min-h-0`}>
+            {/* Mobile Court list scroll container */}
+            <div className={`grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-6 flex-1 overflow-y-auto custom-scrollbar px-1 pb-40 content-start`}>
+              {courts.map(court => (
+                <CourtCard
+                  key={court.id}
+                  court={court}
+                  allPlayers={players}
+                  busyPlayerIds={busyPlayerIds}
+                  playingPlayerIds={playingPlayerIds}
+                  onEndMatch={endMatch}
+                  onCancelMatch={cancelMatch}
+                  onSwapPlayer={swapActivePlayer}
+                  onReplayBroadcast={replayBroadcast}
+                  onRemoveCourt={removeCourt}
+                  onUpdateName={updateCourtName}
+                  matchQueueCount={matchQueue.length}
+                  nextMatch={matchQueue[0]} // For visual indication
+                  onAssignNext={() => {
+                    const validIndex = matchQueue.findIndex(match => !match.some(id => playingPlayerIds.has(id)));
 
-                  if (validIndex === -1) {
-                    // Try to suggest a Smart Swap with *Queued* players (Fairness + Level Balance)
-                    const topMatch = matchQueue[0];
-                    const busyInTop = topMatch.filter(id => playingPlayerIds.has(id));
+                    if (validIndex === -1) {
+                      // Try to suggest a Smart Swap with *Queued* players (Fairness + Level Balance)
+                      const topMatch = matchQueue[0];
+                      const busyInTop = topMatch.filter(id => playingPlayerIds.has(id));
 
-                    if (busyInTop.length > 0) {
-                      // Find candidates from *subsequent* matches in the queue
-                      const swaps: { busyId: string, targetId: string, matchIndex: number, matchPlayerIndex: number }[] = [];
-                      const usedTargetIds = new Set<string>();
+                      if (busyInTop.length > 0) {
+                        // Find candidates from *subsequent* matches in the queue
+                        const swaps: { busyId: string, targetId: string, matchIndex: number, matchPlayerIndex: number }[] = [];
+                        const usedTargetIds = new Set<string>();
 
-                      // Try to find a swap for each busy player
-                      for (const busyId of busyInTop) {
-                        const busyPlayer = players.find(p => p.id === busyId);
-                        if (!busyPlayer) continue;
+                        // Try to find a swap for each busy player
+                        for (const busyId of busyInTop) {
+                          const busyPlayer = players.find(p => p.id === busyId);
+                          if (!busyPlayer) continue;
 
-                        let bestCandidate: { id: string, matchIndex: number, playerIndex: number, score: number } | null = null;
+                          let bestCandidate: { id: string, matchIndex: number, playerIndex: number, score: number } | null = null;
 
-                        // Search matches starting from index 1
-                        for (let i = 1; i < matchQueue.length; i++) {
-                          const candidateMatch = matchQueue[i];
-                          if (candidateMatch.includes(busyId)) continue;
+                          // Search matches starting from index 1
+                          for (let i = 1; i < matchQueue.length; i++) {
+                            const candidateMatch = matchQueue[i];
+                            if (candidateMatch.includes(busyId)) continue;
 
-                          for (let j = 0; j < candidateMatch.length; j++) {
-                            const cId = candidateMatch[j];
-                            if (playingPlayerIds.has(cId) || usedTargetIds.has(cId) || topMatch.includes(cId)) continue;
+                            for (let j = 0; j < candidateMatch.length; j++) {
+                              const cId = candidateMatch[j];
+                              if (playingPlayerIds.has(cId) || usedTargetIds.has(cId) || topMatch.includes(cId)) continue;
 
-                            const candidate = players.find(p => p.id === cId);
-                            if (!candidate) continue;
+                              const candidate = players.find(p => p.id === cId);
+                              if (!candidate) continue;
 
-                            // Score: Level Diff (Lower is better) * 100 + Games Diff (Lower is better)
-                            // Primary: Level, Secondary: Games
-                            const levelDiff = Math.abs(candidate.level - busyPlayer.level);
-                            const gamesDiff = candidate.gamesPlayed; // Just prioritize low games
-                            const score = levelDiff * 1000 + gamesDiff;
+                              // Score: Level Diff (Lower is better) * 100 + Games Diff (Lower is better)
+                              // Primary: Level, Secondary: Games
+                              const levelDiff = Math.abs(candidate.level - busyPlayer.level);
+                              const gamesDiff = candidate.gamesPlayed; // Just prioritize low games
+                              const score = levelDiff * 1000 + gamesDiff;
 
-                            if (!bestCandidate || score < bestCandidate.score) {
-                              bestCandidate = { id: cId, matchIndex: i, playerIndex: j, score };
+                              if (!bestCandidate || score < bestCandidate.score) {
+                                bestCandidate = { id: cId, matchIndex: i, playerIndex: j, score };
+                              }
                             }
+                          }
+
+                          if (bestCandidate) {
+                            swaps.push({ busyId, targetId: bestCandidate.id, matchIndex: bestCandidate.matchIndex, matchPlayerIndex: bestCandidate.playerIndex });
+                            usedTargetIds.add(bestCandidate.id);
                           }
                         }
 
-                        if (bestCandidate) {
-                          swaps.push({ busyId, targetId: bestCandidate.id, matchIndex: bestCandidate.matchIndex, matchPlayerIndex: bestCandidate.playerIndex });
-                          usedTargetIds.add(bestCandidate.id);
-                        }
-                      }
+                        // Only proceed if we found swaps for ALL busy players in top match
+                        if (swaps.length > 0 && swaps.length === busyInTop.length) {
+                          const swapDesc = swaps.map(s => {
+                            const bName = players.find(p => p.id === s.busyId)?.name;
+                            const tName = players.find(p => p.id === s.targetId)?.name;
+                            const bLevel = players.find(p => p.id === s.busyId)?.level;
+                            const tLevel = players.find(p => p.id === s.targetId)?.level;
+                            return `• ${bName} (忙/L${bLevel}) ↔ ${tName} (第${s.matchIndex + 1}組/L${tLevel})`;
+                          }).join('\n');
 
-                      // Only proceed if we found swaps for ALL busy players in top match
-                      if (swaps.length > 0 && swaps.length === busyInTop.length) {
-                        const swapDesc = swaps.map(s => {
-                          const bName = players.find(p => p.id === s.busyId)?.name;
-                          const tName = players.find(p => p.id === s.targetId)?.name;
-                          const bLevel = players.find(p => p.id === s.busyId)?.level;
-                          const tLevel = players.find(p => p.id === s.targetId)?.level;
-                          return `• ${bName} (忙/L${bLevel}) ↔ ${tName} (第${s.matchIndex + 1}組/L${tLevel})`;
-                        }).join('\n');
+                          if (window.confirm(`所有排程皆被卡住。\n建議與後方隊伍交換 (優先匹配等級) 以解鎖第一組：\n\n${swapDesc}\n\n是否執行交換並直接上場？`)) {
+                            let newQueue = [...matchQueue];
+                            let newTopMatch = [...topMatch];
 
-                        if (window.confirm(`所有排程皆被卡住。\n建議與後方隊伍交換 (優先匹配等級) 以解鎖第一組：\n\n${swapDesc}\n\n是否執行交換並直接上場？`)) {
-                          let newQueue = [...matchQueue];
-                          let newTopMatch = [...topMatch];
+                            // Apply swaps
+                            swaps.forEach(s => {
+                              // 1. Put target into top match
+                              const busyIdx = newTopMatch.indexOf(s.busyId);
+                              if (busyIdx !== -1) newTopMatch[busyIdx] = s.targetId;
 
-                          // Apply swaps
-                          swaps.forEach(s => {
-                            // 1. Put target into top match
-                            const busyIdx = newTopMatch.indexOf(s.busyId);
-                            if (busyIdx !== -1) newTopMatch[busyIdx] = s.targetId;
+                              // 2. Put busy into later match
+                              const laterMatch = [...newQueue[s.matchIndex]];
+                              laterMatch[s.matchPlayerIndex] = s.busyId;
+                              newQueue[s.matchIndex] = laterMatch;
+                            });
 
-                            // 2. Put busy into later match
-                            const laterMatch = [...newQueue[s.matchIndex]];
-                            laterMatch[s.matchPlayerIndex] = s.busyId;
-                            newQueue[s.matchIndex] = laterMatch;
-                          });
+                            // Update queue first to reflect the swap
+                            newQueue[0] = newTopMatch;
+                            setMatchQueue(newQueue.slice(1)); // Remove top match as we are assigning it
 
-                          // Update queue first to reflect the swap
-                          newQueue[0] = newTopMatch;
-                          setMatchQueue(newQueue.slice(1)); // Remove top match as we are assigning it
-
-                          // Assign the new top match immediately
-                          setCourts(prev => prev.map(c => {
-                            if (c.id === court.id) {
-                              const courtName = c.name;
-                              const pNames = players.filter(p => newTopMatch.includes(p.id)).map(p => p.name);
-                              if (pNames.length > 0 && isAutoBroadcastEnabled) {
-                                geminiService.broadcastAnnouncement(pNames, courtName);
+                            // Assign the new top match immediately
+                            setCourts(prev => prev.map(c => {
+                              if (c.id === court.id) {
+                                const courtName = c.name;
+                                const pNames = players.filter(p => newTopMatch.includes(p.id)).map(p => p.name);
+                                if (pNames.length > 0 && isAutoBroadcastEnabled) {
+                                  geminiService.broadcastAnnouncement(pNames, courtName);
+                                }
+                                return { ...c, players: newTopMatch, isActive: true, startTime: Date.now() };
                               }
-                              return { ...c, players: newTopMatch, isActive: true, startTime: Date.now() };
-                            }
-                            return c;
-                          }));
-                          return;
-                        } else {
-                          return;
+                              return c;
+                            }));
+                            return;
+                          } else {
+                            return;
+                          }
                         }
                       }
+
+                      alert("目前佇列中所有對戰都有球員正在忙碌中，且後方無足夠閒置人員可供交換！");
+                      return;
                     }
 
-                    alert("目前佇列中所有對戰都有球員正在忙碌中，且後方無足夠閒置人員可供交換！");
-                    return;
-                  }
-
-                  if (validIndex === 0) {
-                    assignMatchToCourt(court.id, 0);
-                  } else {
-                    // Smart Skip
-                    const skippedCount = validIndex;
-                    if (window.confirm(`前 ${skippedCount} 組對戰有球員忙碌中，是否直接指派第 ${validIndex + 1} 組 (可上場)？`)) {
-                      assignMatchToCourt(court.id, validIndex);
+                    if (validIndex === 0) {
+                      assignMatchToCourt(court.id, 0);
+                    } else {
+                      // Smart Skip
+                      const skippedCount = validIndex;
+                      if (window.confirm(`前 ${skippedCount} 組對戰有球員忙碌中，是否直接指派第 ${validIndex + 1} 組 (可上場)？`)) {
+                        assignMatchToCourt(court.id, validIndex);
+                      }
                     }
-                  }
-                }}
-              />
-            ))}
+                  }}
+                />
+              ))}
+            </div>
           </div>
 
-          <div className="lg:col-span-3 flex flex-col gap-6 h-full min-h-[850px]">
+          <div className="hidden lg:col-span-3 lg:flex flex-col gap-6 h-full overflow-hidden">
             <MatchQueue
               queue={matchQueue}
               allPlayers={players}
@@ -1453,6 +1519,44 @@ const App: React.FC = () => {
               onAssignToCourt={assignMatchToCourt}
               onAutoAssignAll={autoAssignAllEmptyCourts}
             />
+          </div>
+
+          {/* Mobile Right Sidebar: Queue */}
+          <div className={`
+            fixed inset-0 z-50 w-full bg-slate-100 p-0 shadow-2xl overflow-hidden flex flex-col transition-transform duration-300 ease-in-out lg:hidden
+            ${activeMobileView === 'queue' ? 'translate-x-0' : 'translate-x-full'}
+          `}
+            style={{ pointerEvents: activeMobileView === 'queue' ? 'auto' : 'none' }}
+          >
+            {/* Absolute Close Button */}
+            <button
+              onClick={() => setActiveMobileView('none')}
+              className="absolute top-4 right-4 z-[60] w-9 h-9 rounded-full bg-slate-100/80 backdrop-blur-sm border border-slate-200 text-slate-500 shadow-sm flex items-center justify-center font-bold active:scale-95 transition-all"
+            >
+              ✕
+            </button>
+            <div className="flex-1 min-h-0 h-full overflow-hidden pb-8">
+              {activeMobileView === 'queue' && (
+                <MatchQueue
+                  queue={matchQueue}
+                  allPlayers={players}
+                  history={history}
+                  busyPlayerIds={busyPlayerIds}
+                  playingPlayerIds={playingPlayerIds}
+                  onSchedule={scheduleQueue}
+                  onNormalSchedule={normalScheduleQueue}
+                  onAddBlankMatch={addBlankMatch}
+                  onManualSchedule={manualScheduleQueue}
+                  onRemove={removeFromQueue}
+                  onReorder={reorderQueue}
+                  onSwapPlayer={swapQueuePlayer}
+                  isScheduling={isScheduling}
+                  availableCourts={courts.filter(c => !c.isActive)}
+                  onAssignToCourt={assignMatchToCourt}
+                  onAutoAssignAll={autoAssignAllEmptyCourts}
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>

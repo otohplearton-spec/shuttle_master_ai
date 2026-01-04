@@ -47,6 +47,7 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
 
   const [roundsToSchedule, setRoundsToSchedule] = useState(1);
   const [expandedMatchIdx, setExpandedMatchIdx] = useState<number | null>(null);
+  const [isControlsCollapsed, setIsControlsCollapsed] = useState(false);
 
   const activeEditingId = swappingIdx ? queue[swappingIdx.qIdx][swappingIdx.pIdx] : null;
   const currentMatchIds = swappingIdx ? queue[swappingIdx.qIdx] : [];
@@ -95,90 +96,103 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
-      <div className="p-6 border-b bg-slate-50">
-        <h2 className="text-xl font-bold flex items-center gap-2 mb-4">
-          <span className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-            </svg>
-          </span>
-          待上場名單 ({queue.length})
+    <div className="bg-white md:rounded-3xl shadow-sm md:border border-slate-200 flex flex-col h-full overflow-hidden">
+      <div className="p-6 pr-14 border-b bg-slate-50">
+        <h2
+          className="text-xl font-bold flex items-center justify-between mb-4 cursor-pointer hover:opacity-80 transition-opacity select-none"
+          onClick={() => setIsControlsCollapsed(!isControlsCollapsed)}
+        >
+          <div className="flex items-center gap-2">
+            <span className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+              </svg>
+            </span>
+            待上場名單 ({queue.length})
+          </div>
+
+          <div className={`text-slate-400 transition-transform duration-200 ${isControlsCollapsed ? 'rotate-180' : ''}`}>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" /></svg>
+          </div>
         </h2>
 
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
-              <button
-                onClick={() => setRoundsToSchedule(Math.max(1, roundsToSchedule - 1))}
-                className="w-9 h-9 flex items-center justify-center bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-indigo-600 font-bold active:scale-90 transition-all"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" /></svg>
-              </button>
-              <input
-                type="number"
-                value={roundsToSchedule}
-                onChange={(e) => setRoundsToSchedule(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-10 bg-transparent font-black text-lg text-center text-indigo-600 p-0 border-none focus:ring-0 mx-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [appearance:textfield]"
-              />
-              <button
-                onClick={() => setRoundsToSchedule(roundsToSchedule + 1)}
-                className="w-9 h-9 flex items-center justify-center bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-indigo-600 font-bold active:scale-90 transition-all"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>
-              </button>
+
+
+        {!isControlsCollapsed && (
+          <div className="space-y-3 animate-in fade-in slide-in-from-top-1">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+                <button
+                  onClick={() => setRoundsToSchedule(Math.max(1, roundsToSchedule - 1))}
+                  className="w-9 h-9 flex items-center justify-center bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-indigo-600 font-bold active:scale-90 transition-all"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" /></svg>
+                </button>
+                <input
+                  type="number"
+                  value={roundsToSchedule}
+                  onChange={(e) => setRoundsToSchedule(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-10 bg-transparent font-black text-lg text-center text-indigo-600 p-0 border-none focus:ring-0 mx-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [appearance:textfield]"
+                />
+                <button
+                  onClick={() => setRoundsToSchedule(roundsToSchedule + 1)}
+                  className="w-9 h-9 flex items-center justify-center bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-indigo-600 font-bold active:scale-90 transition-all"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>
+                </button>
+              </div>
+              <div className="flex-1 flex gap-2">
+                <button
+                  onClick={handleNormalSchedule}
+                  disabled={isScheduling || allPlayers.length < 4}
+                  className="flex-1 bg-white border-2 border-indigo-600 text-indigo-600 py-2 rounded-xl font-black text-xs hover:bg-indigo-50 transition-all disabled:opacity-50"
+                >
+                  普通智排
+                </button>
+                <button
+                  onClick={() => onSchedule(roundsToSchedule)}
+                  disabled={isScheduling || allPlayers.length < 4}
+                  className="flex-1 bg-indigo-600 text-white py-2 rounded-xl font-black text-xs shadow-md hover:bg-indigo-700 transition-all disabled:opacity-50"
+                >
+                  AI 智排
+                </button>
+              </div>
             </div>
-            <div className="flex-1 flex gap-2">
+
+            <button
+              onClick={onAutoAssignAll}
+              disabled={!canAutoAssign}
+              className={`w-full py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 ${canAutoAssign
+                ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white hover:from-indigo-700 hover:to-blue-700'
+                : 'bg-slate-100 text-slate-400 opacity-50 cursor-not-allowed'
+                }`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+              </svg>
+              一鍵指派所有空場 {availableCourts.length > 0 && `(剩餘 ${availableCourts.length} 場)`}
+            </button>
+
+            <div className="flex gap-2">
               <button
-                onClick={handleNormalSchedule}
-                disabled={isScheduling || allPlayers.length < 4}
-                className="flex-1 bg-white border-2 border-indigo-600 text-indigo-600 py-2 rounded-xl font-black text-xs hover:bg-indigo-50 transition-all disabled:opacity-50"
+                onClick={onAddBlankMatch}
+                className="flex-1 bg-white border-2 border-dashed border-slate-300 text-slate-500 py-2 rounded-xl font-bold text-xs hover:border-indigo-400 hover:text-indigo-500 transition-all flex items-center justify-center gap-2"
               >
-                普通智排
+                + 空白場
               </button>
               <button
-                onClick={() => onSchedule(roundsToSchedule)}
-                disabled={isScheduling || allPlayers.length < 4}
-                className="flex-1 bg-indigo-600 text-white py-2 rounded-xl font-black text-xs shadow-md hover:bg-indigo-700 transition-all disabled:opacity-50"
+                onClick={onManualSchedule}
+                disabled={allPlayers.length < 4}
+                className="px-4 bg-emerald-600 text-white py-2 rounded-xl font-black text-xs shadow-md hover:bg-emerald-700 transition-all disabled:opacity-50"
               >
-                AI 智排
+                +1 智慧場次
               </button>
             </div>
           </div>
-
-          <button
-            onClick={onAutoAssignAll}
-            disabled={!canAutoAssign}
-            className={`w-full py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 ${canAutoAssign
-              ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white hover:from-indigo-700 hover:to-blue-700'
-              : 'bg-slate-100 text-slate-400 opacity-50 cursor-not-allowed'
-              }`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-            </svg>
-            一鍵指派所有空場 {availableCourts.length > 0 && `(剩餘 ${availableCourts.length} 場)`}
-          </button>
-
-          <div className="flex gap-2">
-            <button
-              onClick={onAddBlankMatch}
-              className="flex-1 bg-white border-2 border-dashed border-slate-300 text-slate-500 py-2 rounded-xl font-bold text-xs hover:border-indigo-400 hover:text-indigo-500 transition-all flex items-center justify-center gap-2"
-            >
-              + 空白場
-            </button>
-            <button
-              onClick={onManualSchedule}
-              disabled={allPlayers.length < 4}
-              className="px-4 bg-emerald-600 text-white py-2 rounded-xl font-black text-xs shadow-md hover:bg-emerald-700 transition-all disabled:opacity-50"
-            >
-              +1 智慧場次
-            </button>
-          </div>
-        </div>
+        )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar relative">
+      <div className="flex-1 overflow-y-auto p-4 pb-40 space-y-3 custom-scrollbar relative">
         {swappingIdx && (
           <div className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden">
