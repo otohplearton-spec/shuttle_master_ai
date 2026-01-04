@@ -12,6 +12,10 @@ import LoginScreen from './components/LoginScreen';
 import { lineService } from './services/lineService';
 import { geminiService } from './services/geminiService';
 import { memberService } from './services/memberService';
+import { ecpayService } from './services/ecpayService';
+import ECPayForm, { ECPayPaymentData } from './components/ECPayForm';
+import PricingModal, { PricingPlan } from './components/PricingModal';
+
 
 // GLOBAL ERROR HANDLER FOR MOBILE DEBUGGING
 if (typeof window !== 'undefined') {
@@ -151,8 +155,28 @@ const App: React.FC = () => {
         if (isLoggedIn && !currentUser) {
           const profile = await lineService.getProfile();
           if (profile) {
+            // Update User State
             setCurrentUser(profile);
             localStorage.setItem('shuttle_master_user', JSON.stringify(profile));
+
+            // Sync Latest Status from Google Sheet (e.g. PRO upgrade)
+            const membership = await memberService.checkMembership(profile);
+            if (membership) {
+              const updated = { ...profile, ...membership };
+              setCurrentUser(updated);
+              localStorage.setItem('shuttle_master_user', JSON.stringify(updated));
+            }
+          }
+        } else if (currentUser) {
+          // Also re-check if user is already loaded from localstorage
+          // This ensures refreshing the page updates the status
+          const membership = await memberService.checkMembership(currentUser);
+          if (membership) {
+            const updated = { ...currentUser, ...membership };
+            if (JSON.stringify(updated) !== JSON.stringify(currentUser)) {
+              setCurrentUser(updated);
+              localStorage.setItem('shuttle_master_user', JSON.stringify(updated));
+            }
           }
         }
       } catch (e) {
@@ -305,6 +329,9 @@ const App: React.FC = () => {
   });
 
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'fail'>('idle');
+  const [ecpayData, setEcpayData] = useState<ECPayPaymentData | null>(null);
+  const [showPricingModal, setShowPricingModal] = useState(false);
+
 
   const handleLogin = (user: UserProfile) => {
     setCurrentUser(user);
@@ -349,15 +376,20 @@ const App: React.FC = () => {
     }
   }, []);
 
-  const handleUpgrade = async () => {
-    if (!currentUser) return;
-    if (!window.confirm('確定要升級 PRO 嗎？(將導向 LINE Pay 測試付款 NT$1)')) return;
+  const handleUpgrade = () => {
+    setShowPricingModal(true);
+  };
 
-    const res = await memberService.requestUpgrade(currentUser.userId);
-    if (res.success && res.paymentUrl) {
-      window.location.href = res.paymentUrl;
+  const handleSelectPlan = async (plan: PricingPlan) => {
+    if (!currentUser) return;
+    setPaymentStatus('processing');
+    const res = await ecpayService.createPayment(currentUser.userId, plan.name, plan.price, plan.days);
+
+    if (res.success && res.paymentData) {
+      setEcpayData(res.paymentData);
     } else {
-      alert('建立付款失敗: ' + res.message);
+      setPaymentStatus('fail');
+      alert('建立付款失敗: ' + (res.message || '未知錯誤'));
     }
   };
 
@@ -516,7 +548,7 @@ const App: React.FC = () => {
   const addCourt = () => {
     // PRO Feature: Limit courts for non-pro users
     if (courts.length >= 1 && !currentUser?.isPro) {
-      if (window.confirm("✨ 進階功能提示\n\n一般會員僅限使用 1 面場地。\n\n是否立即升級 PRO 會員 (NT$1) 以解鎖無限場地？")) {
+      if (window.confirm("✨ 進階功能提示\n\n一般會員僅限使用 1 面場地。\n\n是否立即升級 PRO 會員以解鎖無限場地？")) {
         handleUpgrade();
       }
       return;
@@ -1155,6 +1187,39 @@ const App: React.FC = () => {
 
             {/* Desktop Header Toolbar */}
             <div className="hidden lg:flex items-center gap-4">
+              {currentUser?.isPro ? (
+                <div className="bg-gradient-to-r from-amber-200 to-yellow-400 text-yellow-900 px-4 py-2 rounded-2xl font-black shadow-sm flex items-center gap-2 border-2 border-yellow-300 transform hover:scale-105 transition-transform cursor-default" title={`到期日: ${currentUser.expiryDate ? new Date(currentUser.expiryDate).toLocaleDateString() : '未知'}`}>
+                  <span>👑 PRO</span>
+                  <span className="text-xs bg-white/40 px-2 py-0.5 rounded-full backdrop-blur-sm">
+                    剩 {currentUser.expiryDate ? Math.max(0, Math.ceil((new Date(currentUser.expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0} 天
+                  </span>
+                </div>
+              ) : (
+                <button
+                  onClick={() => handleUpgrade()}
+                  className="bg-gradient-to-r from-amber-200 to-yellow-400 text-yellow-900 px-4 py-2 rounded-2xl font-black shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-1 border-2 border-yellow-300 animate-pulse"
+                >
+                  <span>👑</span> 升級 PRO
+                </button>
+              )}
+
+              <button
+                onClick={() => setShowHistoryModal(true)}
+                className="bg-white px-4 py-2 rounded-2xl font-bold text-slate-600 shadow-sm border-2 border-slate-200 hover:border-slate-400 hover:text-slate-800 transition-all text-sm flex items-center gap-2"
+              >
+                📜 歷史
+              </button>
+
+              <button
+                onClick={handleEndSession}
+                className={`px-4 py-2 rounded-2xl font-black transition-all shadow-sm text-sm border-2 ${resetStep === 0
+                  ? 'bg-white border-slate-200 text-slate-400 hover:border-red-400 hover:text-red-500'
+                  : 'bg-red-500 border-red-600 text-white animate-pulse'
+                  }`}
+              >
+                {resetStep === 0 ? '結束' : '確定？'}
+              </button>
+
               <button onClick={addCourt} className="bg-white border-2 border-indigo-600 text-indigo-600 px-6 py-2 rounded-2xl font-black hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
                 ＋ 場地
               </button>
@@ -1287,6 +1352,18 @@ const App: React.FC = () => {
                     <span className="text-lg font-black text-slate-600">A</span>
                   </div>
                 </div>
+
+                {!currentUser?.isPro && (
+                  <button
+                    onClick={() => {
+                      setActiveMobileView('none');
+                      handleUpgrade();
+                    }}
+                    className="w-full flex items-center justify-center gap-2 p-3 mb-3 bg-gradient-to-r from-amber-200 to-yellow-400 text-yellow-900 rounded-xl font-black shadow-lg shadow-yellow-200/50"
+                  >
+                    <span className="text-xl">👑</span> 升級 PRO (解鎖功能)
+                  </button>
+                )}
 
                 <button
                   onClick={handleEndSession}
@@ -1591,6 +1668,17 @@ const App: React.FC = () => {
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
       `}</style>
+      {
+        ecpayData && <ECPayForm paymentData={ecpayData} />
+      }
+
+      <PricingModal
+        isOpen={showPricingModal}
+        onClose={() => setShowPricingModal(false)}
+        onSelectPlan={handleSelectPlan}
+        isLoading={paymentStatus === 'processing'}
+      />
+
     </div>
   );
 };
