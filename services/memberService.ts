@@ -13,34 +13,38 @@ export interface PaymentResponse {
     transactionId?: string;
 }
 
+// Assuming UserProfile is defined elsewhere or will be added.
+// For the purpose of this edit, we'll assume it looks something like this:
+export interface UserProfile {
+    userId: string;
+    displayName: string;
+    pictureUrl?: string;
+    // ... other profile fields
+}
+
 export const memberService = {
     /**
-     * Check membership status via Google Apps Script
+     * Check membership status from Google Sheet (via GAS)
+     * Supports registering new users if they don't exist
      */
-    checkMembership: async (userId: string, displayName?: string): Promise<MemberStatus> => {
+    checkMembership: async (userOrId: string | UserProfile): Promise<MemberStatus> => {
+        const userId = typeof userOrId === 'string' ? userOrId : userOrId.userId;
+        const userData = typeof userOrId === 'object' ? userOrId : null;
+
         try {
             const response = await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'text/plain;charset=utf-8',
-                },
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({
-                    action: 'check',
-                    userId,
-                    displayName
+                    action: 'check_membership',
+                    userId: userId,
+                    // If we have full user profile, send it to update/create sheet row
+                    displayName: userData?.displayName || '',
+                    pictureUrl: userData?.pictureUrl || ''
                 })
             });
-
-            if (!response.ok) return { isPro: false };
             const data = await response.json();
-
-            if (data.success) {
-                return {
-                    isPro: data.isPro,
-                    expiryDate: data.expiry
-                };
-            }
-            return { isPro: false };
+            return data;
         } catch (error) {
             console.error('Failed to check membership:', error);
             return { isPro: false };

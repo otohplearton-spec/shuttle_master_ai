@@ -302,6 +302,15 @@ const App: React.FC = () => {
   const handleLogin = (user: UserProfile) => {
     setCurrentUser(user);
     localStorage.setItem('shuttle_master_user', JSON.stringify(user));
+
+    // Sync with Google Sheet (Upsert user)
+    memberService.checkMembership(user).then(updatedStatus => {
+      if (updatedStatus) {
+        const updatedUser = { ...user, ...updatedStatus };
+        setCurrentUser(updatedUser);
+        localStorage.setItem('shuttle_master_user', JSON.stringify(updatedUser));
+      }
+    });
   };
 
   // Check for Payment Callback

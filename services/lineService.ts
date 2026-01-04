@@ -54,7 +54,12 @@ export const lineService = {
             const profile = await liff.getProfile();
 
             // Check membership status via Google Sheets
-            const memberStatus = await memberService.checkMembership(profile.userId, profile.displayName);
+            const memberStatus = await memberService.checkMembership({
+                userId: profile.userId,
+                displayName: profile.displayName || '',
+                pictureUrl: profile.pictureUrl,
+                isPro: false // Default
+            } as UserProfile);
 
             return {
                 userId: profile.userId,

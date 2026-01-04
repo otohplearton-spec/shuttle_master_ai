@@ -11,6 +11,8 @@
   "dependencies": {
     "@google/genai": "^1.34.0",
     "@line/liff": "^2.27.3",
+    "@react-oauth/google": "^0.13.4",
+    "jwt-decode": "^4.0.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },
