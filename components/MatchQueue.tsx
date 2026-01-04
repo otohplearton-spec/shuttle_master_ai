@@ -292,7 +292,7 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
                           const p = allPlayers.find(x => x.id === id);
                           const isBusy = playingPlayerIds.has(id);
                           return (
-                            <div key={id} className={`p-2 rounded-lg font-bold text-center truncate ${isBusy ? 'bg-red-50 text-red-600 ring-1 ring-red-200' : 'bg-slate-50'}`}>
+                            <div key={id} className={`p-2 rounded-lg font-bold text-center break-words ${isBusy ? 'bg-red-50 text-red-600 ring-1 ring-red-200' : 'bg-slate-50'}`}>
                               {p?.name || '?'}
                               {isBusy && <span className="text-[9px] ml-1">(戰)</span>}
                             </div>
@@ -305,7 +305,7 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
                           const p = allPlayers.find(x => x.id === id);
                           const isBusy = playingPlayerIds.has(id);
                           return (
-                            <div key={id} className={`p-2 rounded-lg font-bold text-center truncate ${isBusy ? 'bg-red-50 text-red-600 ring-1 ring-red-200' : 'bg-slate-50'}`}>
+                            <div key={id} className={`p-2 rounded-lg font-bold text-center break-words ${isBusy ? 'bg-red-50 text-red-600 ring-1 ring-red-200' : 'bg-slate-50'}`}>
                               {p?.name || '?'}
                               {isBusy && <span className="text-[9px] ml-1">(戰)</span>}
                             </div>
@@ -336,7 +336,7 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
                   </div>
                 )}
 
-                <div className={`grid grid-cols-2 gap-2 ${isExpanded ? 'hidden' : ''}`}>
+                <div className={`grid grid-cols-2 gap-1 ${isExpanded ? 'hidden' : ''}`}>
                   {match.map((pid, pIdx) => {
                     const p = allPlayers.find(x => x.id === pid);
                     if (!pid) {
@@ -352,12 +352,12 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
                       );
                     }
                     return (
-                      <div key={pIdx} onClick={() => handleStartSwap(qIdx, pIdx)} className="bg-white border border-slate-100 p-2 rounded-xl cursor-pointer hover:border-indigo-300 transition-colors flex items-center justify-between">
-                        <div className="flex items-center gap-2 overflow-hidden">
+                      <div key={pIdx} onClick={() => handleStartSwap(qIdx, pIdx)} className="bg-white border border-slate-100 p-1 rounded-xl cursor-pointer hover:border-indigo-300 transition-colors flex items-center justify-between">
+                        <div className="flex items-center gap-1 overflow-hidden min-w-0">
                           <div className={`w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-black text-white ${p?.gender === Gender.FEMALE ? 'bg-pink-400' : 'bg-blue-400'}`}>{p?.name.charAt(0)}</div>
-                          <span className="text-xs font-bold text-slate-700 truncate">{p?.name || '未知'}</span>
+                          <span className="text-xs font-bold text-slate-700 break-words leading-none">{p?.name || '未知'}</span>
                         </div>
-                        <span className="text-[9px] font-black text-slate-400 flex-shrink-0 ml-1">L.{p?.level}</span>
+                        <span className="text-[10px] font-black text-slate-400 flex-shrink-0 ml-1">L.{p?.level}</span>
                       </div>
                     );
                   })}

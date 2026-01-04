@@ -279,7 +279,8 @@ const App: React.FC = () => {
   });
 
   const [isScheduling, setIsScheduling] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // Mobile View Mode: 'none' | 'menu' | 'players'
+  const [activeMobileView, setActiveMobileView] = useState<'none' | 'menu' | 'players'>('none');
   const [showImportModal, setShowImportModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [resetStep, setResetStep] = useState(0);
@@ -295,6 +296,12 @@ const App: React.FC = () => {
   const [isAutoBroadcastEnabled, setIsAutoBroadcastEnabled] = useState(() => {
     const saved = localStorage.getItem('isAutoBroadcastEnabled');
     return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  // 字體大小 (百分比 80-130)
+  const [fontSizeScale, setFontSizeScale] = useState(() => {
+    const saved = localStorage.getItem('fontSizeScale');
+    return saved !== null ? Number(saved) : 100;
   });
 
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'fail'>('idle');
@@ -411,6 +418,14 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('isAutoBroadcastEnabled', JSON.stringify(isAutoBroadcastEnabled));
   }, [isAutoBroadcastEnabled]);
+
+  useEffect(() => {
+    localStorage.setItem('fontSizeScale', String(fontSizeScale));
+    // Apply font size to root
+    const baseSize = 16; // Default base size
+    const newSize = baseSize * (fontSizeScale / 100);
+    document.documentElement.style.fontSize = `${newSize}px`;
+  }, [fontSizeScale]);
 
   useEffect(() => {
     if (resetStep === 1) {
@@ -1053,8 +1068,8 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-4">
-            {/* 計分模式開關 */}
-            <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:border-amber-200">
+            {/* 計分模式開關 (Desktop Only) */}
+            <div className="hidden lg:flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:border-amber-200">
               <div className={`p-1.5 rounded-lg transition-colors ${isScoreEnabled ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-400'}`}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-7.535 5.503a1 1 0 101.07 1.683c.852-.54 2.117-.824 3.465-.824s2.613.284 3.465.824a1 1 0 001.07-1.683C14.306 13.05 12.585 12.5 10.5 12.5s-3.806.55-5.035 1.503z" clipRule="evenodd" />
@@ -1074,8 +1089,8 @@ const App: React.FC = () => {
               </button>
             </div>
 
-            {/* 語音廣播開關 */}
-            <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:border-indigo-200">
+            {/* 語音廣播開關 (Desktop Only) */}
+            <div className="hidden lg:flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:border-indigo-200">
               <div className={`p-1.5 rounded-lg transition-colors ${isAutoBroadcastEnabled ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}>
                 {isAutoBroadcastEnabled ? (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
@@ -1097,16 +1112,30 @@ const App: React.FC = () => {
               </button>
             </div>
 
+            {/* Mobile Players Button (Restored) */}
             <button
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden px-4 py-2 rounded-2xl font-bold bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all text-sm flex items-center gap-2"
+              onClick={() => setActiveMobileView('players')}
+              className="lg:hidden p-2 rounded-xl bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all mr-2"
+              aria-label="Players"
             >
-              👥 球員
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </button>
+
+            <button
+              onClick={() => setActiveMobileView('menu')}
+              className="lg:hidden p-2 rounded-xl bg-white text-slate-600 shadow-sm border-2 border-slate-200 hover:bg-slate-50 transition-all"
+              aria-label="Menu"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
             </button>
 
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1 bg-white px-3 py-1.5 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:bg-red-50 hover:border-red-200 text-slate-400 hover:text-red-500"
+              className="hidden lg:flex items-center gap-1 bg-white px-3 py-1.5 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:bg-red-50 hover:border-red-200 text-slate-400 hover:text-red-500"
               title="登出"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1116,14 +1145,14 @@ const App: React.FC = () => {
 
             <button
               onClick={() => setShowHistoryModal(true)}
-              className="px-4 py-2 rounded-2xl font-bold bg-white text-slate-600 shadow-sm border-2 border-slate-200 hover:border-slate-400 hover:text-slate-800 transition-all text-sm flex items-center gap-2"
+              className="hidden lg:flex px-4 py-2 rounded-2xl font-bold bg-white text-slate-600 shadow-sm border-2 border-slate-200 hover:border-slate-400 hover:text-slate-800 transition-all text-sm items-center gap-2"
             >
               📜 歷史
             </button>
             {/* ... other buttons ... */}
             <button
               onClick={handleEndSession}
-              className={`px-4 py-2 rounded-2xl font-black transition-all shadow-sm text-sm border-2 ${resetStep === 0
+              className={`hidden lg:block px-4 py-2 rounded-2xl font-black transition-all shadow-sm text-sm border-2 ${resetStep === 0
                 ? 'bg-white border-slate-200 text-slate-400 hover:border-red-400 hover:text-red-500'
                 : 'bg-red-500 border-red-600 text-white animate-pulse'
                 }`}
@@ -1141,52 +1170,138 @@ const App: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start relative">
           {/* Mobile Sidebar Overlay */}
-          {isMobileMenuOpen && (
+          {activeMobileView !== 'none' && (
             <div
               className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden animate-in fade-in"
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={() => setActiveMobileView('none')}
             />
           )}
 
           {/* Left Column: Player Management (Sidebar on Mobile) */}
           <div className={`
-            lg:col-span-3 flex flex-col gap-6 h-full lg:min-h-[850px] transition-transform duration-300 ease-in-out
-            ${isMobileMenuOpen ? 'fixed inset-0 h-[100dvh] z-50 w-full bg-slate-100 p-4 shadow-2xl overflow-hidden flex flex-col' : 'hidden lg:flex'}
+            lg:col-span-3 flex-col gap-6 h-full lg:min-h-[850px] transition-transform duration-300 ease-in-out
+            ${activeMobileView !== 'none' ? 'fixed inset-0 h-[100dvh] z-50 w-full bg-slate-100 p-4 shadow-2xl overflow-hidden flex' : 'hidden lg:flex'}
           `}>
-            <div className="lg:hidden flex justify-between items-center mb-2 shrink-0">
-              <h3 className="font-black text-xl text-slate-800">👥 球員管理</h3>
-              <button onClick={() => setIsMobileMenuOpen(false)} className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold">✕</button>
-            </div>
-            <div className="flex gap-3 mb-2 shrink-0">
-              <div className="flex-1">
-                <AddPlayerForm onAdd={addPlayer} />
+            {/* Header for Mobile Sidebar */}
+            {activeMobileView !== 'none' && (
+              <div className="lg:hidden flex justify-between items-center mb-4 shrink-0 border-b border-slate-200 pb-4">
+                <h3 className="font-black text-2xl text-slate-800">
+                  {activeMobileView === 'menu' ? 'Menu' : '👥 球員管理'}
+                </h3>
+                <button onClick={() => setActiveMobileView('none')} className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold">✕</button>
               </div>
-              <button
-                onClick={() => setShowImportModal(true)}
-                className="flex-1 py-4 rounded-2xl border-2 border-dashed border-indigo-300 text-indigo-500 font-bold hover:bg-indigo-50 hover:border-indigo-500 hover:text-indigo-700 transition-all flex items-center justify-center gap-2 group"
-              >
-                <span className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 group-hover:scale-110 transition-all text-xl">📋</span>
-                <span>批次匯入</span>
-              </button>
-            </div>
-            <PlayerList
-              players={players}
-              courts={courts}
-              matchQueue={matchQueue}
-              history={history}
-              playingPlayerIds={playingPlayerIds}
-              queuedPlayerIds={queuedPlayerIds}
-              onDelete={deletePlayer}
-              onUpdateLevel={updatePlayerLevel}
-              onUpdateTargetGames={updatePlayerTargetGames}
-              onTogglePause={togglePlayerPause}
-            />
-            <div className="lg:hidden p-4 border-t border-slate-100 bg-slate-50 space-y-3 pb-8 shrink-0">
-              {/* Footer actions cleared */}
+            )}
+
+            {/* CONTENT: SYSTEM MENU (Only show if view is 'menu') */}
+            {(activeMobileView === 'menu') && (
+              <div className="lg:hidden space-y-4 shrink-0 overflow-y-auto flex-1">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">🏆</span>
+                      <span className="font-bold text-slate-700">計分模式</span>
+                    </div>
+                    <button
+                      onClick={() => setIsScoreEnabled(!isScoreEnabled)}
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isScoreEnabled ? 'bg-amber-500' : 'bg-slate-200'}`}
+                    >
+                      <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isScoreEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">📢</span>
+                      <span className="font-bold text-slate-700">自動廣播</span>
+                    </div>
+                    <button
+                      onClick={() => setIsAutoBroadcastEnabled(!isAutoBroadcastEnabled)}
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isAutoBroadcastEnabled ? 'bg-indigo-600' : 'bg-slate-200'}`}
+                    >
+                      <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isAutoBroadcastEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => { setShowHistoryModal(true); setActiveMobileView('none'); }}
+                    className="p-3 rounded-xl font-bold bg-white text-slate-600 shadow-sm border-2 border-slate-200 hover:border-slate-400 flex items-center justify-center gap-2"
+                  >
+                    📜 歷史紀錄
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="p-3 rounded-xl font-bold bg-white text-slate-400 shadow-sm border-2 border-slate-200 hover:bg-red-50 hover:text-red-500 flex items-center justify-center gap-2"
+                  >
+                    🚪 登出
+                  </button>
+                </div>
+
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-bold text-slate-600">🅰️ 字體大小 (Font Size)</span>
+                    <span className="text-xs font-black bg-slate-100 text-slate-500 px-2 py-0.5 rounded">{fontSizeScale}%</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-slate-400">A</span>
+                    <input
+                      type="range"
+                      min="85"
+                      max="125"
+                      step="5"
+                      value={fontSizeScale}
+                      onChange={(e) => setFontSizeScale(Number(e.target.value))}
+                      className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                    />
+                    <span className="text-lg font-black text-slate-600">A</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleEndSession}
+                  className={`w-full p-3 rounded-xl font-black transition-all shadow-sm border-2 flex items-center justify-center gap-2 ${resetStep === 0
+                    ? 'bg-slate-100 border-slate-200 text-slate-400 hover:bg-red-50 hover:text-red-500'
+                    : 'bg-red-500 border-red-600 text-white animate-pulse'
+                    }`}
+                >
+                  🛑 {resetStep === 0 ? '結束本次活動' : '確定要結束嗎？'}
+                </button>
+              </div>
+            )}
+
+            {/* CONTENT: PLAYERS (Show if view is 'players' OR on Desktop) */}
+            <div className={`${(activeMobileView === 'menu') ? 'hidden' : 'flex'} flex-col gap-6 h-full overflow-hidden lg:flex`}>
+              <div className="flex gap-3 mb-2 shrink-0">
+                <div className="flex-1">
+                  <AddPlayerForm onAdd={addPlayer} />
+                </div>
+                <button
+                  onClick={() => setShowImportModal(true)}
+                  className="flex-1 py-4 rounded-2xl border-2 border-dashed border-indigo-300 text-indigo-500 font-bold hover:bg-indigo-50 hover:border-indigo-500 hover:text-indigo-700 transition-all flex items-center justify-center gap-2 group"
+                >
+                  <span className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 group-hover:scale-110 transition-all text-xl">📋</span>
+                  <span>批次匯入</span>
+                </button>
+              </div>
+              <PlayerList
+                players={players}
+                courts={courts}
+                matchQueue={matchQueue}
+                history={history}
+                playingPlayerIds={playingPlayerIds}
+                queuedPlayerIds={queuedPlayerIds}
+                onDelete={deletePlayer}
+                onUpdateLevel={updatePlayerLevel}
+                onUpdateTargetGames={updatePlayerTargetGames}
+                onTogglePause={togglePlayerPause}
+              />
+              {/* Mobile Font Size Control Removed from footer (moved to top) */}
             </div>
           </div>
 
-          <div className={`lg:col-span-6 grid ${courts.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} md:grid-cols-2 gap-2 md:gap-6`}>
+
+          <div className={`lg:col-span-6 grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-6`}>
             {courts.map(court => (
               <CourtCard
                 key={court.id}
@@ -1342,28 +1457,34 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {showImportModal && (
-        <QuickImportModal onClose={() => setShowImportModal(false)} onImport={bulkAddPlayers} />
-      )}
+      {
+        showImportModal && (
+          <QuickImportModal onClose={() => setShowImportModal(false)} onImport={bulkAddPlayers} />
+        )
+      }
 
-      {showHistoryModal && (
-        <MatchHistoryList
-          history={history}
-          allPlayers={players}
-          onClose={() => setShowHistoryModal(false)}
-          currentUser={currentUser}
-        />
-      )}
+      {
+        showHistoryModal && (
+          <MatchHistoryList
+            history={history}
+            allPlayers={players}
+            onClose={() => setShowHistoryModal(false)}
+            currentUser={currentUser}
+          />
+        )
+      }
 
-      {endingCourtId && (
-        <ScoreInputModal
-          ids={courts.find(c => c.id === endingCourtId)?.players || []}
-          allPlayers={players}
-          onConfirm={(score) => finalizeMatch(endingCourtId, score)}
-          onCancel={() => setEndingCourtId(null)}
-          onSkip={() => finalizeMatch(endingCourtId)}
-        />
-      )}
+      {
+        endingCourtId && (
+          <ScoreInputModal
+            ids={courts.find(c => c.id === endingCourtId)?.players || []}
+            allPlayers={players}
+            onConfirm={(score) => finalizeMatch(endingCourtId, score)}
+            onCancel={() => setEndingCourtId(null)}
+            onSkip={() => finalizeMatch(endingCourtId)}
+          />
+        )
+      }
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
