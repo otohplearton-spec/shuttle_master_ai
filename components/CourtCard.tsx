@@ -166,9 +166,9 @@ const CourtCard: React.FC<CourtCardProps> = ({
                 const p = allPlayers.find(x => x.id === pid);
                 return (
                   <div key={idx} className="bg-white/95 rounded-xl p-2 md:p-3 flex flex-col items-center justify-between text-center cursor-pointer hover:bg-indigo-50 transition-all shadow-lg h-full min-h-[140px]" onClick={() => setSwappingIdx(idx)}>
-                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-black text-white text-sm md:text-base mb-1 ${p?.gender === Gender.FEMALE ? 'bg-pink-400' : 'bg-blue-400'} ${getAvatarLevelClasses(p?.level || 0)}`}>{p?.name.charAt(0)}</div>
+                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-black text-white text-base md:text-lg mb-1 ${p?.gender === Gender.FEMALE ? 'bg-pink-400' : 'bg-blue-400'} ${getAvatarLevelClasses(p?.level || 0)}`}>{p?.name.charAt(0)}</div>
                     <div className="flex-1 flex items-center justify-center w-full min-h-[2.5rem]">
-                      <div className="font-bold text-slate-800 text-sm md:text-base break-words w-full leading-tight line-clamp-2">{p?.name || '未知'}</div>
+                      <div className="font-bold text-slate-800 text-base md:text-lg break-words w-full leading-tight line-clamp-2">{p?.name || '未知'}</div>
                     </div>
                     <div className="text-xs text-slate-500 font-bold hidden md:block mt-1">LV.{p?.level} | {p?.gamesPlayed}場</div>
                     <div className="text-[10px] text-slate-500 font-bold md:hidden mt-0.5">L{p?.level} {p?.gamesPlayed}場</div>
