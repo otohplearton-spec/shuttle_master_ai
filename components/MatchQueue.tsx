@@ -300,7 +300,7 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
                       <div className="text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg">隊伍 B (LV: {analysis.lv2})</div>
                     </div>
 
-                    <div className="flex items-center justify-around gap-2 text-xs">
+                    <div className="flex items-center justify-around gap-2 text-sm">
                       <div className="flex flex-col gap-1 flex-1">
                         {[match[0], match[1]].map(id => {
                           const p = allPlayers.find(x => x.id === id);
@@ -308,7 +308,7 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
                           return (
                             <div key={id} className={`p-2 rounded-lg font-bold text-center break-words ${isBusy ? 'bg-red-50 text-red-600 ring-1 ring-red-200' : 'bg-slate-50'}`}>
                               {p?.name || '?'}
-                              {isBusy && <span className="text-[9px] ml-1">(戰)</span>}
+                              {isBusy && <span className="text-xs ml-1">(戰)</span>}
                             </div>
                           );
                         })}
@@ -321,7 +321,7 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
                           return (
                             <div key={id} className={`p-2 rounded-lg font-bold text-center break-words ${isBusy ? 'bg-red-50 text-red-600 ring-1 ring-red-200' : 'bg-slate-50'}`}>
                               {p?.name || '?'}
-                              {isBusy && <span className="text-[9px] ml-1">(戰)</span>}
+                              {isBusy && <span className="text-xs ml-1">(戰)</span>}
                             </div>
                           );
                         })}
@@ -366,10 +366,10 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
                       );
                     }
                     return (
-                      <div key={pIdx} onClick={() => handleStartSwap(qIdx, pIdx)} className="bg-white border border-slate-100 p-1 rounded-xl cursor-pointer hover:border-indigo-300 transition-colors flex items-center justify-between">
-                        <div className="flex items-center gap-1 overflow-hidden min-w-0">
-                          <div className={`w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-black text-white ${p?.gender === Gender.FEMALE ? 'bg-pink-400' : 'bg-blue-400'}`}>{p?.name.charAt(0)}</div>
-                          <span className="text-xs font-bold text-slate-700 break-words leading-none">{p?.name || '未知'}</span>
+                      <div key={pIdx} onClick={() => handleStartSwap(qIdx, pIdx)} className="bg-white border border-slate-100 p-2 rounded-xl cursor-pointer hover:border-indigo-300 transition-colors flex items-center justify-between">
+                        <div className="flex items-center gap-2 overflow-hidden min-w-0">
+                          <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-black text-white ${p?.gender === Gender.FEMALE ? 'bg-pink-400' : 'bg-blue-400'}`}>{p?.name.charAt(0)}</div>
+                          <span className="text-sm font-bold text-slate-800 break-words leading-tight">{p?.name || '未知'}</span>
                         </div>
                         <span className="text-[10px] font-black text-slate-400 flex-shrink-0 ml-1">L.{p?.level}</span>
                       </div>

@@ -67,8 +67,8 @@ const CourtCard: React.FC<CourtCardProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden flex flex-col h-[380px] md:h-[420px]">
-      <div className="bg-slate-800 p-2 md:p-4 text-white flex justify-between items-center group/header">
+    <div className={`bg-white rounded-3xl shadow-lg border border-slate-200 flex flex-col h-auto mb-4 relative transition-none ${swappingIdx !== null ? 'z-[50]' : 'z-0'}`}>
+      <div className="bg-slate-800 p-2 md:p-4 text-white flex justify-between items-center group/header shrink-0 rounded-t-3xl">
         <div className="flex items-center gap-3 flex-1">
           <div className="bg-indigo-500 p-1.5 md:p-2 rounded-lg flex-shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-7.535 5.503a1 1 0 101.07 1.683c.852-.54 2.117-.824 3.465-.824s2.613.284 3.465.824a1 1 0 001.07-1.683C14.306 13.05 12.585 12.5 10.5 12.5s-3.806.55-5.035 1.503z" clipRule="evenodd" /></svg>
@@ -98,7 +98,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
         <button onClick={() => onRemoveCourt(court.id)} className="text-slate-400 hover:text-white transition-colors ml-2">✕</button>
       </div>
 
-      <div className="flex-1 bg-[#2e7d32] p-2 md:p-6 relative overflow-hidden flex flex-col">
+      <div className="bg-[#2e7d32] p-2 md:p-6 relative flex flex-col items-center justify-center flex-auto shrink-0 w-full min-h-[350px] md:min-h-[380px]">
         <div className="absolute inset-4 border-2 border-white/30 pointer-events-none z-0">
           <div className="absolute top-1/2 left-0 w-full h-px bg-white/40 -translate-y-1/2"></div>
           <div className="absolute top-0 bottom-0 left-1/2 w-px bg-white/30 -translate-x-1/2"></div>
@@ -118,7 +118,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
           <div className="fixed inset-0 z-[60] bg-white md:bg-slate-900/60 md:backdrop-blur-sm md:flex md:items-center md:justify-center md:p-4 animate-in fade-in duration-200">
             <div className="w-full h-full md:bg-white md:w-full md:max-w-md md:rounded-2xl md:shadow-2xl md:max-h-[90%] md:border-4 md:border-indigo-500 overflow-hidden flex flex-col">
               <div className="p-3 bg-slate-50 border-b flex justify-between items-center">
-                <span className="text-[10px] font-black text-slate-500 uppercase">更換球員</span>
+                <span className="text-sm md:text-base font-black text-slate-500 uppercase">更換球員</span>
                 <button onClick={() => setSwappingIdx(null)} className="text-slate-400 font-bold p-1">✕</button>
               </div>
               <div className="flex-1 overflow-y-auto p-2 custom-scrollbar space-y-1">
@@ -128,8 +128,11 @@ const CourtCard: React.FC<CourtCardProps> = ({
                   if (isSelf) return null;
                   return (
                     <button key={p.id} onClick={() => { onSwapPlayer(court.id, activeEditingPlayerId!, p.id); setSwappingIdx(null); }} className={`w-full text-left p-3 rounded-xl border flex items-center justify-between hover:bg-indigo-600 hover:text-white transition-all ${isInMatch ? 'bg-indigo-50 border-indigo-200' : 'bg-white'}`}>
-                      <span className="font-bold text-sm">{p.name} {busyPlayerIds.has(p.id) && !court.players.includes(p.id) && <span className="text-[8px] bg-amber-100 text-amber-600 px-1 rounded ml-1">已排/比賽中</span>}</span>
-                      <span className="text-[10px] font-black opacity-60">L{p.level}</span>
+                      <div className="flex flex-col gap-1">
+                        <span className="font-bold text-base md:text-lg">{p.name}</span>
+                        {busyPlayerIds.has(p.id) && !court.players.includes(p.id) && <span className="text-xs bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded font-bold w-fit">已在忙碌中</span>}
+                      </div>
+                      <span className="text-xs md:text-sm font-black opacity-60">L{p.level}</span>
                     </button>
                   );
                 })}
@@ -138,7 +141,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
           </div>
         )}
 
-        <div className="flex-1 relative z-10 flex flex-col justify-center">
+        <div className="relative z-10 w-full flex flex-col items-stretch">
           {!court.isActive ? (
             <div className="flex flex-col items-center gap-4">
               <div className="text-center py-6 px-4 bg-black/20 rounded-2xl backdrop-blur-sm border border-white/10 text-white/70 italic text-sm">
@@ -158,15 +161,17 @@ const CourtCard: React.FC<CourtCardProps> = ({
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-2 grid-rows-2 gap-3 h-full max-h-[220px]">
+            <div className="grid grid-cols-2 gap-3">
               {court.players.map((pid, idx) => {
                 const p = allPlayers.find(x => x.id === pid);
                 return (
-                  <div key={idx} className="bg-white/95 rounded-xl p-2 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-indigo-50 transition-all shadow-lg" onClick={() => setSwappingIdx(idx)}>
-                    <div className={`w-8 h-8 rounded-full mb-1 flex items-center justify-center font-black text-white text-[0.625rem] ${p?.gender === Gender.FEMALE ? 'bg-pink-400' : 'bg-blue-400'} ${getAvatarLevelClasses(p?.level || 0)}`}>{p?.name.charAt(0)}</div>
-                    <div className="font-bold text-slate-800 text-[0.625rem] md:text-xs truncate w-full">{p?.name || '未知'}</div>
-                    <div className="text-[0.625rem] md:text-[0.75rem] text-slate-500 font-bold hidden md:block">LV.{p?.level} | {p?.gamesPlayed}場</div>
-                    <div className="text-[0.625rem] text-slate-500 font-bold md:hidden">L{p?.level} {p?.gamesPlayed}場</div>
+                  <div key={idx} className="bg-white/95 rounded-xl p-2 md:p-3 flex flex-col items-center justify-between text-center cursor-pointer hover:bg-indigo-50 transition-all shadow-lg h-full min-h-[140px]" onClick={() => setSwappingIdx(idx)}>
+                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-black text-white text-sm md:text-base mb-1 ${p?.gender === Gender.FEMALE ? 'bg-pink-400' : 'bg-blue-400'} ${getAvatarLevelClasses(p?.level || 0)}`}>{p?.name.charAt(0)}</div>
+                    <div className="flex-1 flex items-center justify-center w-full min-h-[2.5rem]">
+                      <div className="font-bold text-slate-800 text-sm md:text-base break-words w-full leading-tight line-clamp-2">{p?.name || '未知'}</div>
+                    </div>
+                    <div className="text-xs text-slate-500 font-bold hidden md:block mt-1">LV.{p?.level} | {p?.gamesPlayed}場</div>
+                    <div className="text-[10px] text-slate-500 font-bold md:hidden mt-0.5">L{p?.level} {p?.gamesPlayed}場</div>
                   </div>
                 );
               })}
@@ -175,7 +180,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
         </div>
       </div>
 
-      <div className="p-4 bg-slate-50 border-t">
+      <div className="p-4 bg-slate-50 border-t shrink-0 rounded-b-3xl min-h-[84px] flex flex-col justify-center">
         {court.isActive && (
           <div className="flex gap-2">
             <button
