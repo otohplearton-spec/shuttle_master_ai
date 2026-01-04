@@ -1115,69 +1115,64 @@ const App: React.FC = () => {
             </div>
 
             {/* Mobile Menu Button (Docked) */}
-            <button
-              onClick={() => setActiveMobileView('menu')}
-              className="lg:hidden p-2 rounded-xl bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all mr-2"
-              aria-label="Menu"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            <button
-              onClick={() => setActiveMobileView('players')}
-              className="lg:hidden p-2 rounded-xl bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all mr-2"
-              aria-label="Players"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            </button>
+            {/* Mobile Header Toolbar: Menu, Players, Queue, Add, Games */}
+            <div className="lg:hidden flex items-center gap-2">
+              <button
+                onClick={() => setActiveMobileView('menu')}
+                className="p-1.5 rounded-xl bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all"
+                aria-label="Menu"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setActiveMobileView('players')}
+                className="p-1.5 rounded-xl bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all"
+                aria-label="Players"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setActiveMobileView('queue')}
+                className="p-1.5 rounded-xl bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all"
+                aria-label="Queue"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </button>
+              <button onClick={addCourt} className="p-1.5 rounded-xl bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all font-black text-lg w-[44px] h-[44px] flex items-center justify-center">
+                ＋
+              </button>
+              <div className="bg-slate-800 text-white px-3 py-2 rounded-2xl flex items-baseline gap-1 shadow-xl border-2 border-slate-700/50">
+                <span className="text-[10px] font-bold opacity-60 uppercase tracking-widest leading-none">Games</span>
+                <span className="text-xl font-black leading-none">{matchCount}</span>
+              </div>
+            </div>
 
-            <button
-              onClick={() => setActiveMobileView('queue')}
-              className="lg:hidden p-2 rounded-xl bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all"
-              aria-label="Queue"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </button>
-
-
+            {/* Desktop Header Toolbar */}
+            <div className="hidden lg:flex items-center gap-4">
+              <button onClick={addCourt} className="bg-white border-2 border-indigo-600 text-indigo-600 px-6 py-2 rounded-2xl font-black hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                ＋ 場地
+              </button>
+              <div className="bg-slate-800 text-white px-3 py-2 rounded-2xl flex items-baseline gap-2 shadow-xl border-2 border-slate-700/50">
+                <span className="text-[10px] font-bold opacity-60 uppercase tracking-widest leading-none">Games</span>
+                <span className="text-xl font-black leading-none">{matchCount}</span>
+              </div>
+            </div>
 
             <button
               onClick={handleLogout}
-              className="hidden lg:flex items-center gap-1 bg-white px-3 py-1.5 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:bg-red-50 hover:border-red-200 text-slate-400 hover:text-red-500"
+              className="hidden lg:flex items-center gap-1 bg-white px-3 py-1.5 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:bg-red-50 hover:border-red-200 text-slate-400 hover:text-red-500 ml-auto"
               title="登出"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
             </button>
-
-            <button
-              onClick={() => setShowHistoryModal(true)}
-              className="hidden lg:flex px-4 py-2 rounded-2xl font-bold bg-white text-slate-600 shadow-sm border-2 border-slate-200 hover:border-slate-400 hover:text-slate-800 transition-all text-sm items-center gap-2"
-            >
-              📜 歷史
-            </button>
-            {/* ... other buttons ... */}
-            <button
-              onClick={handleEndSession}
-              className={`hidden lg:block px-4 py-2 rounded-2xl font-black transition-all shadow-sm text-sm border-2 ${resetStep === 0
-                ? 'bg-white border-slate-200 text-slate-400 hover:border-red-400 hover:text-red-500'
-                : 'bg-red-500 border-red-600 text-white animate-pulse'
-                }`}
-            >
-              {resetStep === 0 ? '結束' : '確定？'}
-            </button>
-
-            <button onClick={addCourt} className="bg-white border-2 border-indigo-600 text-indigo-600 px-6 py-2 rounded-2xl font-black hover:bg-indigo-600 hover:text-white transition-all shadow-sm">＋ 場地</button>
-            <div className="bg-slate-800 text-white px-2 py-3 rounded-2xl flex flex-col items-center justify-center shadow-xl w-16">
-              <span className="text-[8px] font-bold opacity-60 uppercase tracking-widest leading-none">Games</span>
-              <span className="text-xl font-black leading-none">{matchCount}</span>
-            </div>
           </div>
         </header>
 
