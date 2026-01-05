@@ -377,6 +377,13 @@ const App: React.FC = () => {
   }, []);
 
   const handleUpgrade = () => {
+    // Guest Check
+    if (currentUser?.userId.startsWith('guest_')) {
+      if (window.confirm('👻 訪客模式無法訂閱 PRO 會員\n\nPRO 會員權益需要綁定帳號才能永久保存。\n\n是否現在登出，並切換至 LINE/Google 登入？')) {
+        handleLogout();
+      }
+      return;
+    }
     setShowPricingModal(true);
   };
 
@@ -1188,12 +1195,21 @@ const App: React.FC = () => {
             {/* Desktop Header Toolbar */}
             <div className="hidden lg:flex items-center gap-4">
               {currentUser?.isPro ? (
-                <div className="bg-gradient-to-r from-amber-200 to-yellow-400 text-yellow-900 px-4 py-2 rounded-2xl font-black shadow-sm flex items-center gap-2 border-2 border-yellow-300 transform hover:scale-105 transition-transform cursor-default" title={`到期日: ${currentUser.expiryDate ? new Date(currentUser.expiryDate).toLocaleDateString() : '未知'}`}>
-                  <span>👑 PRO</span>
-                  <span className="text-xs bg-white/40 px-2 py-0.5 rounded-full backdrop-blur-sm">
-                    剩 {currentUser.expiryDate ? Math.max(0, Math.ceil((new Date(currentUser.expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0} 天
-                  </span>
-                </div>
+                <button
+                  onClick={() => handleUpgrade()}
+                  className="relative overflow-hidden bg-gradient-to-r from-amber-200 to-yellow-400 text-yellow-900 px-4 py-2 rounded-2xl font-black shadow-sm border-2 border-yellow-300 transform hover:scale-105 transition-all group"
+                  title={`到期日: ${currentUser.expiryDate ? new Date(currentUser.expiryDate).toLocaleDateString() : '未知'}`}
+                >
+                  <div className="flex items-center gap-2 group-hover:invisible transition-all duration-200">
+                    <span>👑 PRO</span>
+                    <span className="text-xs bg-white/40 px-2 py-0.5 rounded-full backdrop-blur-sm">
+                      剩 {currentUser.expiryDate ? Math.max(0, Math.ceil((new Date(currentUser.expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0} 天
+                    </span>
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center font-black text-yellow-800 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-gradient-to-r from-amber-200 to-yellow-400">
+                    <span>➕ 延長效期</span>
+                  </div>
+                </button>
               ) : (
                 <button
                   onClick={() => handleUpgrade()}
@@ -1355,7 +1371,30 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                {!currentUser?.isPro && (
+                {currentUser?.isPro ? (
+                  <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-yellow-200 rounded-xl p-4 mb-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-yellow-800 font-black">
+                        <span className="text-xl">👑</span> PRO 會員效期中
+                      </div>
+                      <span className="bg-white/50 text-yellow-700 px-2 py-1 rounded-lg text-xs font-bold border border-yellow-100">
+                        剩餘 {currentUser.expiryDate ? Math.max(0, Math.ceil((new Date(currentUser.expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0} 天
+                      </span>
+                    </div>
+                    <div className="text-xs text-yellow-600/80 font-bold ml-1">
+                      到期日: {currentUser.expiryDate ? new Date(currentUser.expiryDate).toLocaleDateString() : '未知'}
+                    </div>
+                    <button
+                      onClick={() => {
+                        setActiveMobileView('none');
+                        handleUpgrade();
+                      }}
+                      className="w-full py-2 bg-white border-2 border-yellow-300 text-yellow-700 rounded-xl font-black shadow-sm hover:bg-yellow-50 transition-all flex items-center justify-center gap-1"
+                    >
+                      <span>➕</span> 延長效期 (Extend)
+                    </button>
+                  </div>
+                ) : (
                   <button
                     onClick={() => {
                       setActiveMobileView('none');
