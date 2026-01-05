@@ -274,6 +274,8 @@ const App: React.FC = () => {
     initMain();
   }, [isPopupMode]);
 
+  const [isPlayerActionsCollapsed, setIsPlayerActionsCollapsed] = useState(false);
+
   const [players, setPlayers] = useState<Player[]>(() => {
     const saved = localStorage.getItem('shuttle_players');
     return saved ? JSON.parse(saved) : [];
@@ -1280,7 +1282,21 @@ const App: React.FC = () => {
               <h3 className="font-black text-2xl text-slate-800">
                 {activeMobileView === 'menu' ? 'Menu' : '👥 球員管理'}
               </h3>
-              <button onClick={() => setActiveMobileView('none')} className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold">✕</button>
+              <div className="flex items-center gap-2">
+                {activeMobileView === 'players' && (
+                  <button
+                    onClick={() => setIsPlayerActionsCollapsed(!isPlayerActionsCollapsed)}
+                    className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-500 hover:bg-indigo-100 flex items-center justify-center transition-colors"
+                  >
+                    {isPlayerActionsCollapsed ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" /></svg>
+                    )}
+                  </button>
+                )}
+                <button onClick={() => setActiveMobileView('none')} className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold">✕</button>
+              </div>
             </div>
 
             {/* CONTENT: SYSTEM MENU (Only show if view is 'menu') */}
@@ -1421,18 +1437,20 @@ const App: React.FC = () => {
             {/* CONTENT: PLAYERS (Mobile Only) */}
             {(activeMobileView === 'players') && (
               <div className="flex flex-col gap-6 h-full overflow-hidden">
-                <div className="flex gap-3 mb-2 shrink-0">
-                  <div className="flex-1">
-                    <AddPlayerForm onAdd={addPlayer} />
+                {!isPlayerActionsCollapsed && (
+                  <div className="flex gap-3 mb-4 shrink-0 animate-in fade-in slide-in-from-top-1">
+                    <div className="flex-1">
+                      <AddPlayerForm onAdd={addPlayer} />
+                    </div>
+                    <button
+                      onClick={() => setShowImportModal(true)}
+                      className="flex-1 py-4 rounded-2xl border-2 border-dashed border-indigo-300 text-indigo-500 font-bold hover:bg-indigo-50 hover:border-indigo-500 hover:text-indigo-700 transition-all flex items-center justify-center gap-2 group"
+                    >
+                      <span className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 group-hover:scale-110 transition-all text-xl">📋</span>
+                      <span>批次匯入</span>
+                    </button>
                   </div>
-                  <button
-                    onClick={() => setShowImportModal(true)}
-                    className="flex-1 py-4 rounded-2xl border-2 border-dashed border-indigo-300 text-indigo-500 font-bold hover:bg-indigo-50 hover:border-indigo-500 hover:text-indigo-700 transition-all flex items-center justify-center gap-2 group"
-                  >
-                    <span className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 group-hover:scale-110 transition-all text-xl">📋</span>
-                    <span>批次匯入</span>
-                  </button>
-                </div>
+                )}
                 <PlayerList
                   players={players}
                   courts={courts}

@@ -30,6 +30,8 @@ const PlayerList: React.FC<PlayerListProps> = ({
 }) => {
   const [selectedPlayerHistory, setSelectedPlayerHistory] = useState<string | null>(null);
 
+  const [searchTerm, setSearchTerm] = useState('');
+
   // 統一獲取該球員所有「進行中與排隊中」的比賽 (回傳 [team1, team2] 結構的陣列)
   const getActiveMatchesForPlayer = (playerId: string) => {
     const matches: { teams: string[][] }[] = [];
@@ -111,22 +113,47 @@ const PlayerList: React.FC<PlayerListProps> = ({
     };
   };
 
-  // 排序球員
-  // 改為固定排序 (依照加入時間)，避免因場次變化導致名單跳動
-  const sortedPlayers = players;
+  // 篩選並排序球員
+  const sortedPlayers = players.filter(p =>
+    p.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="bg-white p-3 md:p-6 rounded-2xl shadow-sm border border-slate-200 flex-1 overflow-hidden flex flex-col">
-      <h2 className="text-xl font-bold mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="w-8 h-8 bg-green-100 text-green-600 rounded-lg flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
-          </span>
-          球友狀態 ({players.length})
+      <div className="flex flex-col gap-3 mb-4">
+        <h2 className="text-xl font-bold flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-8 h-8 bg-green-100 text-green-600 rounded-lg flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
+            </span>
+            球友狀態 ({players.length})
+          </div>
+        </h2>
+
+        {/* Search Bar */}
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <input
+            type="text"
+            placeholder="搜尋球員..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-200 focus:border-green-400 transition-all font-bold placeholder-slate-400"
+          />
         </div>
-      </h2>
+      </div>
+
       <div className="overflow-y-auto flex-1 space-y-2 pr-2 pb-40 custom-scrollbar">
-        {players.length === 0 && <div className="text-center py-12 text-slate-400 text-sm">尚未加入球友</div>}
+        {players.length === 0 ? (
+          <div className="text-center py-12 text-slate-400 text-sm">尚未加入球友</div>
+        ) : sortedPlayers.length === 0 ? (
+          <div className="text-center py-12 text-slate-400 text-sm">找不到符合 "{searchTerm}" 的球員</div>
+        ) : null}
+
         {sortedPlayers.map((player) => {
           const isPlaying = playingPlayerIds.has(player.id);
           const isQueued = queuedPlayerIds.has(player.id);
