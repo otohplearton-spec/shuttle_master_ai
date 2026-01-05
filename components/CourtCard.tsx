@@ -115,24 +115,37 @@ const CourtCard: React.FC<CourtCardProps> = ({
         )}
 
         {swappingIdx !== null && (
-          <div className="fixed inset-0 z-[60] bg-white md:bg-slate-900/60 md:backdrop-blur-sm md:flex md:items-center md:justify-center md:p-4 animate-in fade-in duration-200">
-            <div className="w-full h-full md:bg-white md:w-full md:max-w-md md:rounded-2xl md:shadow-2xl md:max-h-[90%] md:border-4 md:border-indigo-500 overflow-hidden flex flex-col">
-              <div className="p-3 bg-slate-50 border-b flex justify-between items-center">
-                <span className="text-sm md:text-base font-black text-slate-500 uppercase">更換球員</span>
-                <button onClick={() => setSwappingIdx(null)} className="text-slate-400 font-bold p-1">✕</button>
+          <div className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden border-4 border-indigo-500">
+              <div className="p-4 border-b bg-slate-50 flex justify-between items-center">
+                <span className="text-lg font-black text-slate-800 flex items-center gap-2">
+                  🔄 選擇替換球員
+                </span>
+                <button onClick={() => setSwappingIdx(null)} className="w-8 h-8 rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300 flex items-center justify-center font-bold transition-colors">✕</button>
               </div>
-              <div className="flex-1 overflow-y-auto p-2 custom-scrollbar space-y-1">
+              <div className="p-2 overflow-y-auto flex-1 custom-scrollbar space-y-1">
                 {selectablePlayers.map(p => {
                   const isSelf = p.id === activeEditingPlayerId;
                   const isInMatch = court.players.includes(p.id) && !isSelf;
+
+                  // Status Logic
+                  const isPlaying = playingPlayerIds.has(p.id); // On ANY active court
+                  const isQueueing = busyPlayerIds.has(p.id) && !isPlaying; // In queue but not playing
+                  const isResting = !isPlaying && !isQueueing; // Free
+
                   if (isSelf) return null;
+
                   return (
-                    <button key={p.id} onClick={() => { onSwapPlayer(court.id, activeEditingPlayerId!, p.id); setSwappingIdx(null); }} className={`w-full text-left p-3 rounded-xl border flex items-center justify-between hover:bg-indigo-600 hover:text-white transition-all ${isInMatch ? 'bg-indigo-50 border-indigo-200' : 'bg-white'}`}>
+                    <button key={p.id} onClick={() => { onSwapPlayer(court.id, activeEditingPlayerId!, p.id); setSwappingIdx(null); }} className={`w-full text-left p-3 rounded-xl border flex items-center justify-between hover:bg-indigo-600 hover:text-white transition-all group ${isInMatch ? 'bg-indigo-50 border-indigo-200' : 'bg-white'}`}>
                       <div className="flex flex-col gap-1">
-                        <span className="font-bold text-base md:text-lg">{p.name}</span>
-                        {busyPlayerIds.has(p.id) && !court.players.includes(p.id) && <span className="text-xs bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded font-bold w-fit">已在忙碌中</span>}
+                        <span className="font-bold text-base md:text-lg group-hover:text-white">{p.name}</span>
+                        <div className="flex gap-1">
+                          {isPlaying && <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-bold w-fit group-hover:bg-white/20 group-hover:text-white">對戰中</span>}
+                          {isQueueing && <span className="text-[10px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded font-bold w-fit group-hover:bg-white/20 group-hover:text-white">排隊中</span>}
+                          {isResting && <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold w-fit group-hover:bg-white/20 group-hover:text-white">休息中</span>}
+                        </div>
                       </div>
-                      <span className="text-xs md:text-sm font-black opacity-60">L{p.level}</span>
+                      <span className="text-xs md:text-sm font-black opacity-60 group-hover:opacity-100">L{p.level}</span>
                     </button>
                   );
                 })}

@@ -1077,7 +1077,6 @@ const App: React.FC = () => {
         <header className="flex-shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 md:mb-8 pt-4 md:pt-0 px-4 md:px-0">
           <div className="flex items-center gap-4">
             {/* Use Avatar */}
-            {/* Use Avatar */}
             {currentUser.pictureUrl ? (
               <img src={currentUser.pictureUrl} alt={currentUser.displayName} className="w-12 h-12 rounded-full border-2 border-white shadow-md hidden lg:block" />
             ) : (
@@ -1101,6 +1100,7 @@ const App: React.FC = () => {
               </div>
             </div>
           </div>
+
           <div className="flex flex-wrap items-center gap-4">
             {/* 計分模式開關 (Desktop Only) */}
             <div className="hidden lg:flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:border-amber-200">
@@ -1229,15 +1229,17 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            <button
-              onClick={handleLogout}
-              className="hidden lg:flex items-center gap-1 bg-white px-3 py-1.5 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:bg-red-50 hover:border-red-200 text-slate-400 hover:text-red-500 ml-auto"
-              title="登出"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-3 ml-auto">
+              <button
+                onClick={handleLogout}
+                className="hidden lg:flex items-center gap-1 bg-white px-3 py-1.5 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:bg-red-50 hover:border-red-200 text-slate-400 hover:text-red-500 ml-auto"
+                title="登出"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            </div>
           </div>
         </header>
 
@@ -1631,7 +1633,7 @@ const App: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div >
 
       {
         showImportModal && (
@@ -1679,7 +1681,7 @@ const App: React.FC = () => {
         isLoading={paymentStatus === 'processing'}
       />
 
-    </div>
+    </div >
   );
 };
 
