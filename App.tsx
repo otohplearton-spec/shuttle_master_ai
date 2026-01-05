@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Player, Gender, Court, MatchHistory, UserProfile } from './types';
 import AddPlayerForm from './components/AddPlayerForm';
 import PlayerList from './components/PlayerList';
@@ -275,6 +275,46 @@ const App: React.FC = () => {
   }, [isPopupMode]);
 
   const [isPlayerActionsCollapsed, setIsPlayerActionsCollapsed] = useState(false);
+
+  // --- Auto-Assign State ---
+  const [isAutoAssignEnabled, setIsAutoAssignEnabled] = useState(() => {
+    return localStorage.getItem('shuttle_auto_assign_enabled') === 'true';
+  });
+  const [autoAssignInterval, setAutoAssignInterval] = useState(() => {
+    const saved = localStorage.getItem('shuttle_auto_assign_interval');
+    return saved ? parseInt(saved, 10) : 5;
+  });
+
+  // Persist Auto-Assign State
+  useEffect(() => {
+    localStorage.setItem('shuttle_auto_assign_enabled', String(isAutoAssignEnabled));
+    localStorage.setItem('shuttle_auto_assign_interval', String(autoAssignInterval));
+  }, [isAutoAssignEnabled, autoAssignInterval]);
+
+  // --- Auto-Assign Timer Logic ---
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+    if (isAutoAssignEnabled) {
+      intervalId = setInterval(() => {
+        // Only trigger if we have empty courts AND people in queue
+        // We need to access the LATEST state, so we'll use the functional update or just rely on the closure if deps are right.
+        // Since autoAssignAllEmptyCourts uses state, we simply call it.
+        // However, autoAssignAllEmptyCourts definition needs to be stable or we need to include it in deps.
+        // For simplicity and safety in this big component, we will call a wrapper that calls the function.
+        // Actually, we can't easily access the *latest* courts/queue inside a simple interval closure without refs or complex dependency management.
+        // A common pattern is using a ref to hold the latest function or state.
+
+        // Let's rely on the fact that App re-renders often. But for a timer, we need to be careful.
+        // We will move this useEffect usage *after* autoAssignAllEmptyCourts is defined, OR define a Ref that always holds current state.
+
+        // Actually, for this specific request, let's look at where we are inserting.
+        // We are at line 278, which is BEFORE autoAssignAllEmptyCourts is defined (it's around line 662).
+        // WE CANNOT CALL IT HERE if it's defined later with `const`.
+        // I will insert the State here, but the Logic/Effect needs to go AFTER the function definition.
+      }, 1000);
+    }
+    return () => clearInterval(intervalId);
+  }, [isAutoAssignEnabled]); // This is a placeholder comment, I will NOT insert the effect here.
 
   const [players, setPlayers] = useState<Player[]>(() => {
     const saved = localStorage.getItem('shuttle_players');
@@ -659,9 +699,17 @@ const App: React.FC = () => {
     }));
   };
 
-  const autoAssignAllEmptyCourts = () => {
+  const autoAssignAllEmptyCourts = (isAuto = false) => {
     const availableCourts = courts.filter(c => !c.isActive);
-    if (availableCourts.length === 0 || matchQueue.length === 0) return;
+    if (availableCourts.length === 0 || matchQueue.length === 0) {
+      if (!isAuto) {
+        // Optionally alert if manual and no courts/queue, but originally it just returned.
+        // Let's keep original behavior of returning silently for early checks, 
+        // but if we want to confirm action to user we might want an alert. 
+        // The original code returned silently at line 704.
+      }
+      return;
+    }
 
     let updatedQueue = [...matchQueue];
     let updatedCourts = [...courts];
@@ -709,13 +757,33 @@ const App: React.FC = () => {
       setMatchQueue(updatedQueue);
       setCourts(updatedCourts);
 
-      if (assignedCount < availableCourts.length) {
+      if (!isAuto && assignedCount < availableCourts.length) {
         alert(`已指派 ${assignedCount} 場比賽。部分場地因球員忙碌或佇列不足而未指派。`);
       }
     } else {
-      alert("佇列中所有對戰的球員似乎都正在忙碌中，無法自動指派。");
+      if (!isAuto) {
+        alert("佇列中所有對戰的球員似乎都正在忙碌中，無法自動指派。");
+      }
     }
   };
+
+  // Use a Ref to hold the latest function to avoid restarting the interval on every render
+  const autoAssignRef = useRef(autoAssignAllEmptyCourts);
+  useEffect(() => {
+    autoAssignRef.current = autoAssignAllEmptyCourts;
+  });
+
+  useEffect(() => {
+    if (!isAutoAssignEnabled) return;
+
+    const tick = () => {
+      // Pass isAuto = true to suppress alerts
+      autoAssignRef.current(true);
+    };
+
+    const id = setInterval(tick, autoAssignInterval * 1000);
+    return () => clearInterval(id);
+  }, [isAutoAssignEnabled, autoAssignInterval]);
 
   /**
    * --- 核心演算法：本地智慧排點 (極致平衡場次版) ---
@@ -1155,6 +1223,39 @@ const App: React.FC = () => {
               </button>
             </div>
 
+            {/* Auto Assign (Desktop Only) */}
+            <div className="hidden lg:flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:border-emerald-200">
+              <div className={`p-1.5 rounded-lg transition-colors ${isAutoAssignEnabled ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black text-slate-400 leading-none mb-0.5">自動上場 ({autoAssignInterval}s)</span>
+                <span className={`text-[11px] font-bold leading-none ${isAutoAssignEnabled ? 'text-emerald-600' : 'text-slate-500'}`}>
+                  {isAutoAssignEnabled ? '開啟中' : '已關閉'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsAutoAssignEnabled(!isAutoAssignEnabled)}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isAutoAssignEnabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                >
+                  <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isAutoAssignEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                </button>
+                {isAutoAssignEnabled && (
+                  <input
+                    type="number"
+                    min="2"
+                    max="60"
+                    value={autoAssignInterval}
+                    onChange={(e) => setAutoAssignInterval(Math.max(2, Math.min(60, Number(e.target.value))))}
+                    className="w-12 h-6 text-xs text-center border border-slate-200 rounded-md focus:outline-none focus:border-emerald-500"
+                  />
+                )}
+              </div>
+            </div>
+
             {/* Mobile Menu Button (Docked) */}
             {/* Mobile Header Toolbar: Menu, Players, Queue, Add, Games */}
             <div className="lg:hidden flex items-center gap-2">
@@ -1349,6 +1450,39 @@ const App: React.FC = () => {
                     >
                       <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isAutoBroadcastEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
                     </button>
+                  </div>
+
+                  <div className="flex flex-col p-3 bg-white rounded-xl border border-slate-200 shadow-sm gap-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">🤖</span>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-700">自動上場</span>
+                          <span className="text-xs text-slate-400">系統每 {autoAssignInterval} 秒檢查空場</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setIsAutoAssignEnabled(!isAutoAssignEnabled)}
+                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isAutoAssignEnabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                      >
+                        <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isAutoAssignEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                      </button>
+                    </div>
+                    {isAutoAssignEnabled && (
+                      <div className="flex items-center gap-3 px-2">
+                        <span className="text-xs font-bold text-slate-400">2s</span>
+                        <input
+                          type="range"
+                          min="2"
+                          max="60"
+                          step="1"
+                          value={autoAssignInterval}
+                          onChange={(e) => setAutoAssignInterval(Number(e.target.value))}
+                          className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                        />
+                        <span className="text-xs font-bold text-slate-400">60s</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
