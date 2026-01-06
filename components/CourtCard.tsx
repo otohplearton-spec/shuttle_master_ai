@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Court, Player, Gender } from '../types';
 import { getAvatarLevelClasses } from '../utils/levelStyles';
 
@@ -114,7 +115,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
           </div>
         )}
 
-        {swappingIdx !== null && (
+        {swappingIdx !== null && createPortal(
           <div className="fixed inset-0 z-[9999] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden border-4 border-indigo-500">
               <div className="p-4 border-b bg-slate-50 flex justify-between items-center">
@@ -151,7 +152,8 @@ const CourtCard: React.FC<CourtCardProps> = ({
                 })}
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
         <div className="relative z-10 w-full flex flex-col items-stretch">
