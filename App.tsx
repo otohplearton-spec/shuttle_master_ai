@@ -444,6 +444,44 @@ const App: React.FC = () => {
     }
   };
 
+  const handleRedeemCode = async (code: string): Promise<boolean> => {
+    if (!currentUser) return false;
+
+    try {
+      const res = await memberService.redeemCode(currentUser.userId, code);
+      if (res.success) {
+        // Optimistic UI Update to solve "No Refresh" confusion
+        const updatedUser = {
+          ...currentUser,
+          isPro: true,
+          // Extend local expiry visually if days returned, otherwise just set PRO
+          // We can assume valid for now.
+        };
+
+        // 1. Update State Immediately
+        setCurrentUser(updatedUser);
+        localStorage.setItem('shuttle_master_user', JSON.stringify(updatedUser));
+
+        // 2. Close Modal
+        setShowPricingModal(false);
+
+        // 3. Show Success Message
+        alert(`🎉 兌換成功！\n\n您已升級為 PRO 會員！\n效期已延長 ${res.daysAdded || ''} 天。`);
+
+        // 4. Reload to ensure deep state sync (optional but recommended for strictly gated features)
+        window.location.reload();
+
+        return true;
+      } else {
+        alert('兌換失敗: ' + (res.message || '無效的邀請碼'));
+        return false;
+      }
+    } catch (e) {
+      alert('發生錯誤，請稍後再試');
+      return false;
+    }
+  };
+
   const handleLogout = () => {
     if (window.confirm('確定要登出嗎？')) {
       lineService.logout(); // LIFF Logout
@@ -1890,6 +1928,7 @@ const App: React.FC = () => {
         isOpen={showPricingModal}
         onClose={() => setShowPricingModal(false)}
         onSelectPlan={handleSelectPlan}
+        onRedeemCode={handleRedeemCode}
         isLoading={paymentStatus === 'processing'}
       />
 

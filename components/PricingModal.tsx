@@ -19,10 +19,14 @@ interface PricingModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSelectPlan: (plan: PricingPlan) => void;
+    onRedeemCode?: (code: string) => Promise<boolean>;
     isLoading: boolean;
 }
 
-const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onSelectPlan, isLoading }) => {
+const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onSelectPlan, onRedeemCode, isLoading }) => {
+    const [invitationCode, setInvitationCode] = useState('');
+    const [isRedeeming, setIsRedeeming] = useState(false);
+
     if (!isOpen) return null;
 
     return (
@@ -71,6 +75,38 @@ const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onSelectPl
                         </button>
                     ))}
                 </div>
+
+                {/* Invitation Code Section */}
+                {onRedeemCode && (
+                    <div className="p-6 pt-0 border-t border-slate-100 mt-4">
+                        <div className="flex flex-col gap-2">
+                            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">或是輸入邀請碼</label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={invitationCode}
+                                    onChange={(e) => setInvitationCode(e.target.value)}
+                                    placeholder="輸入邀請碼啟用 PRO"
+                                    className="flex-1 bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2 text-slate-800 font-bold focus:outline-none focus:border-indigo-500 transition-colors"
+                                    disabled={isLoading || isRedeeming}
+                                />
+                                <button
+                                    onClick={async () => {
+                                        if (!invitationCode.trim()) return;
+                                        setIsRedeeming(true);
+                                        await onRedeemCode(invitationCode);
+                                        setIsRedeeming(false);
+                                        setInvitationCode('');
+                                    }}
+                                    disabled={!invitationCode.trim() || isLoading || isRedeeming}
+                                    className="bg-slate-800 text-white px-4 py-2 rounded-xl font-bold hover:bg-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                >
+                                    {isRedeeming ? '驗證中...' : '兌換'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Footer / Loading Overlay */}
                 {isLoading && (

@@ -11,6 +11,7 @@ export interface PaymentResponse {
     message?: string;
     paymentUrl?: string;
     transactionId?: string;
+    daysAdded?: number;
 }
 
 // Assuming UserProfile is defined elsewhere or will be added.
@@ -108,6 +109,28 @@ export const memberService = {
             return data;
         } catch (error: any) {
             console.error('Payment confirm failed', error);
+            return { success: false, message: error.message };
+        }
+    },
+
+    /**
+     * Redeem an invitation code
+     */
+    redeemCode: async (userId: string, code: string): Promise<PaymentResponse> => {
+        try {
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({
+                    action: 'redeem_code',
+                    userId: userId,
+                    code: code
+                })
+            });
+            const data = await response.json();
+            return data;
+        } catch (error: any) {
+            console.error('Redeem code failed', error);
             return { success: false, message: error.message };
         }
     }
