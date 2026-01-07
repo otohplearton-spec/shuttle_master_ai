@@ -8,6 +8,7 @@ import MatchQueue from './components/MatchQueue';
 import MatchHistoryList from './components/MatchHistoryList';
 import QuickImportModal from './components/QuickImportModal';
 import ScoreInputModal from './components/ScoreInputModal';
+import EndSessionModal from './components/EndSessionModal';
 import LoginScreen from './components/LoginScreen';
 import { lineService } from './services/lineService';
 import { geminiService } from './services/geminiService';
@@ -349,6 +350,7 @@ const App: React.FC = () => {
   const [activeMobileView, setActiveMobileView] = useState<'none' | 'menu' | 'players' | 'queue'>('none');
   const [showImportModal, setShowImportModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showEndSessionModal, setShowEndSessionModal] = useState(false);
   const [resetStep, setResetStep] = useState(0);
 
   // 計分功能狀態
@@ -539,29 +541,47 @@ const App: React.FC = () => {
   };
 
   const handleEndSession = () => {
-    if (resetStep === 0) {
-      setResetStep(1);
-    } else {
-      // Clear Session Data
-      localStorage.removeItem('shuttle_players');
-      localStorage.removeItem('shuttle_courts');
-      localStorage.removeItem('shuttle_queue');
-      localStorage.removeItem('shuttle_history');
-      localStorage.removeItem('shuttle_match_count');
+    setShowEndSessionModal(true);
+  };
 
-      // Reset State
-      setPlayers([]);
-      setHistory([]);
-      setMatchCount(0);
-      setMatchQueue([]);
-      setCourts([
-        { id: '1', name: '場地 A', players: [], isActive: false }
-      ]);
+  const handleClearHistoryOnly = () => {
+    // 1. Reset Courts (remove players, set inactive)
+    setCourts(prev => prev.map(c => ({ ...c, players: [], isActive: false, startTime: undefined })));
 
-      setIsSessionActive(false);
-      setActiveMobileView('none');
-      setResetStep(0);
-    }
+    // 2. Clear Queue & History
+    setMatchQueue([]);
+    setHistory([]);
+    setMatchCount(0);
+
+    // 3. Reset Player Stats (Games Played) - Assume new session means fresh starts
+    setPlayers(prev => prev.map(p => ({ ...p, gamesPlayed: 0 })));
+
+    // 4. Close Modal
+    setShowEndSessionModal(false);
+    setActiveMobileView('none');
+    alert("已清除所有對戰紀錄，並保留球員名單。");
+  };
+
+  const handleClearAll = () => {
+    // Clear Session Data
+    localStorage.removeItem('shuttle_players');
+    localStorage.removeItem('shuttle_courts');
+    localStorage.removeItem('shuttle_queue');
+    localStorage.removeItem('shuttle_history');
+    localStorage.removeItem('shuttle_match_count');
+
+    // Reset State
+    setPlayers([]);
+    setHistory([]);
+    setMatchCount(0);
+    setMatchQueue([]);
+    setCourts([
+      { id: '1', name: '場地 A', players: [], isActive: false }
+    ]);
+
+    setIsSessionActive(false);
+    setActiveMobileView('none');
+    setShowEndSessionModal(false);
   };
 
   const addPlayer = (newPlayer: Omit<Player, 'id' | 'gamesPlayed'>) => {
@@ -1331,12 +1351,9 @@ const App: React.FC = () => {
 
               <button
                 onClick={handleEndSession}
-                className={`px-4 py-2 rounded-2xl font-black transition-all shadow-sm text-sm border-2 ${resetStep === 0
-                  ? 'bg-white border-slate-200 text-slate-400 hover:border-red-400 hover:text-red-500'
-                  : 'bg-red-500 border-red-600 text-white animate-pulse'
-                  }`}
+                className="px-4 py-2 rounded-2xl font-black transition-all shadow-sm text-sm border-2 bg-white border-slate-200 text-slate-400 hover:border-red-400 hover:text-red-500"
               >
-                {resetStep === 0 ? '結束' : '確定？'}
+                結束
               </button>
 
               <button onClick={addCourt} className="bg-white border-2 border-indigo-600 text-indigo-600 px-6 py-2 rounded-2xl font-black hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
@@ -1558,12 +1575,9 @@ const App: React.FC = () => {
 
                 <button
                   onClick={handleEndSession}
-                  className={`w-full p-3 rounded-xl font-black transition-all shadow-sm border-2 flex items-center justify-center gap-2 ${resetStep === 0
-                    ? 'bg-slate-100 border-slate-200 text-slate-400 hover:bg-red-50 hover:text-red-500'
-                    : 'bg-red-500 border-red-600 text-white animate-pulse'
-                    }`}
+                  className="w-full p-3 rounded-xl font-black transition-all shadow-sm border-2 flex items-center justify-center gap-2 bg-slate-100 border-slate-200 text-slate-400 hover:bg-red-50 hover:text-red-500"
                 >
-                  🛑 {resetStep === 0 ? '結束本次活動' : '確定要結束嗎？'}
+                  🛑 結束本次活動
                 </button>
               </div>
             )}
@@ -1854,6 +1868,13 @@ const App: React.FC = () => {
           />
         )
       }
+
+      <EndSessionModal
+        isOpen={showEndSessionModal}
+        onClose={() => setShowEndSessionModal(false)}
+        onClearHistoryOnly={handleClearHistoryOnly}
+        onClearAll={handleClearAll}
+      />
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
