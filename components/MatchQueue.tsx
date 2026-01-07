@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Player, Gender, Court, MatchHistory } from '../types';
 
 interface MatchQueueProps {
@@ -18,20 +18,17 @@ interface MatchQueueProps {
   isScheduling: boolean;
   availableCourts: Court[];
   onAssignToCourt: (courtId: string, queueIndex: number) => void;
-  onAutoAssignAll: () => void; // 新增一鍵指派
+  onAutoAssignAll: () => void;
+  onClose?: () => void; // Added for Mobile Header consistency
 }
 
 const MatchQueue: React.FC<MatchQueueProps> = ({
   queue, allPlayers, history, busyPlayerIds, playingPlayerIds,
   onSchedule, onNormalSchedule, onAddBlankMatch, onManualSchedule, onRemove, onReorder, onSwapPlayer, isScheduling,
-  availableCourts, onAssignToCourt, onAutoAssignAll
+  availableCourts, onAssignToCourt, onAutoAssignAll, onClose
 }) => {
   const [swappingIdx, setSwappingIdx] = useState<{ qIdx: number, pIdx: number } | null>(null);
-  // 計算建議場次：(有效球員數 * 6 / 4) - 目前佇列數
-  // 動態調整：隨著佇列增加，建議值會減少，最低為 1
-  // 計算建議場次：
-  // 目標總場次 = Σ(球員目標場數) / 4
-  // 剩餘需排 = 目標總場次 - 已結束(History) - 進行中(Active) - 待上場(Queue)
+
   React.useEffect(() => {
     const activePlayers = allPlayers.filter(p => !p.isPaused);
     const totalTargetGames = activePlayers.reduce((sum, p) => sum + (p.targetGames || 6), 0);
@@ -47,7 +44,16 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
 
   const [roundsToSchedule, setRoundsToSchedule] = useState(1);
   const [expandedMatchIdx, setExpandedMatchIdx] = useState<number | null>(null);
-  const [isControlsCollapsed, setIsControlsCollapsed] = useState(false);
+
+  // Persist collapse state
+  const [isControlsCollapsed, setIsControlsCollapsed] = useState(() => {
+    const saved = localStorage.getItem('shuttle_match_queue_collapsed');
+    return saved === 'true';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('shuttle_match_queue_collapsed', String(isControlsCollapsed));
+  }, [isControlsCollapsed]);
 
   const activeEditingId = swappingIdx ? queue[swappingIdx.qIdx][swappingIdx.pIdx] : null;
   const currentMatchIds = swappingIdx ? queue[swappingIdx.qIdx] : [];
@@ -64,14 +70,12 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
     setSwappingIdx({ qIdx, pIdx });
   };
 
-  // 分析該場次的品質
   const analyzeMatch = (matchIds: string[]) => {
     const p = matchIds.map(id => allPlayers.find(x => x.id === id));
     const lv1 = (p[0]?.level || 0) + (p[1]?.level || 0);
     const lv2 = (p[2]?.level || 0) + (p[3]?.level || 0);
     const diff = Math.abs(lv1 - lv2);
 
-    // 檢查歷史重複
     const recent = history.slice(-15);
     const partnerRepeat = recent.some(h =>
       (h.teams.some(t => t.includes(matchIds[0]) && t.includes(matchIds[1]))) ||
@@ -97,24 +101,36 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
 
   return (
     <div className="bg-white md:rounded-3xl shadow-sm md:border border-slate-200 flex flex-col h-full overflow-hidden">
-      <div className="p-6 pr-14 border-b bg-slate-50">
-        <h2
-          className="text-xl font-bold flex items-center justify-between mb-4 cursor-pointer hover:opacity-80 transition-opacity select-none"
-          onClick={() => setIsControlsCollapsed(!isControlsCollapsed)}
-        >
-          <div className="flex items-center gap-2">
-            <span className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-              </svg>
-            </span>
-            待上場名單 ({queue.length})
-          </div>
+      <div className="p-6 border-b bg-slate-50">
 
-          <div className={`text-slate-400 transition-transform duration-200 ${isControlsCollapsed ? 'rotate-180' : ''}`}>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" /></svg>
+        {/* Header - Aligned with Player List Style */}
+        <div className="flex justify-between items-center mb-4 shrink-0">
+          <h3 className="font-black text-2xl text-slate-800 flex items-center gap-2">
+            <span>📋</span>
+            待上場 ({queue.length})
+          </h3>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsControlsCollapsed(!isControlsCollapsed)}
+              className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-500 hover:bg-indigo-100 flex items-center justify-center transition-colors shadow-sm"
+              title={isControlsCollapsed ? "展開操作" : "收合操作"}
+            >
+              {isControlsCollapsed ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" /></svg>
+              )}
+            </button>
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="w-8 h-8 rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300 flex items-center justify-center font-bold shadow-sm transition-colors"
+              >
+                ✕
+              </button>
+            )}
           </div>
-        </h2>
+        </div>
 
 
 

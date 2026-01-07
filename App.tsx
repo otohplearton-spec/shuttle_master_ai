@@ -1845,13 +1845,6 @@ const App: React.FC = () => {
           `}
             style={{ pointerEvents: activeMobileView === 'queue' ? 'auto' : 'none' }}
           >
-            {/* Absolute Close Button */}
-            <button
-              onClick={() => setActiveMobileView('none')}
-              className="absolute top-4 right-4 z-[60] w-9 h-9 rounded-full bg-slate-100/80 backdrop-blur-sm border border-slate-200 text-slate-500 shadow-sm flex items-center justify-center font-bold active:scale-95 transition-all"
-            >
-              ✕
-            </button>
             <div className="flex-1 min-h-0 h-full overflow-hidden pb-8">
               {activeMobileView === 'queue' && (
                 <MatchQueue
@@ -1871,6 +1864,7 @@ const App: React.FC = () => {
                   availableCourts={courts.filter(c => !c.isActive)}
                   onAssignToCourt={assignMatchToCourt}
                   onAutoAssignAll={autoAssignAllEmptyCourts}
+                  onClose={() => setActiveMobileView('none')}
                 />
               )}
             </div>
