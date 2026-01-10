@@ -14,6 +14,8 @@ interface PlayerListProps {
   onUpdateLevel: (id: string, newLevel: number) => void;
   onUpdateTargetGames: (id: string, newTarget: number) => void;
   onTogglePause: (id: string) => void;
+  isPro: boolean;
+  onUpgrade: () => void;
 }
 
 const PlayerList: React.FC<PlayerListProps> = ({
@@ -26,7 +28,9 @@ const PlayerList: React.FC<PlayerListProps> = ({
   onDelete,
   onUpdateLevel,
   onUpdateTargetGames,
-  onTogglePause
+  onTogglePause,
+  isPro,
+  onUpgrade
 }) => {
   const [selectedPlayerHistory, setSelectedPlayerHistory] = useState<string | null>(null);
 
@@ -304,67 +308,103 @@ const PlayerList: React.FC<PlayerListProps> = ({
 
                   {/* 預計對戰 (累積統計) */}
                   {totalAssignedCount > 0 && (
-                    <div className="p-3 bg-amber-50/50 rounded-xl border border-amber-200">
-                      <h4 className="text-xs font-black text-amber-700 uppercase mb-2 flex items-center gap-1">
-                        <span className="w-1 h-1 bg-amber-500 rounded-full animate-ping"></span>
-                        預計對戰 (已排隊)
-                      </h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <span className="text-[0.7rem] font-bold text-amber-600/70 block mb-1">預計搭檔</span>
-                          <div className="space-y-1">
-                            {getUpcomingStats(player.id).partners.map(([id, count]) => (
-                              <div key={id} className="text-xs flex justify-between">
-                                <span className="text-slate-600 truncate mr-1 font-bold">{players.find(p => p.id === id)?.name}</span>
-                                <span className="font-black text-amber-600/50 flex-shrink-0">{count}次</span>
-                              </div>
-                            ))}
+                    <div className="relative overflow-hidden rounded-xl border border-amber-200 bg-amber-50/50">
+                      <div className={`p-3 ${!isPro ? 'filter blur-md select-none opacity-60' : ''}`}>
+                        <h4 className="text-xs font-black text-amber-700 uppercase mb-2 flex items-center gap-1">
+                          <span className="w-1 h-1 bg-amber-500 rounded-full animate-ping"></span>
+                          預計對戰 (已排隊)
+                        </h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <span className="text-[0.7rem] font-bold text-amber-600/70 block mb-1">預計搭檔</span>
+                            <div className="space-y-1">
+                              {getUpcomingStats(player.id).partners.map(([id, count]) => (
+                                <div key={id} className="text-xs flex justify-between">
+                                  <span className="text-slate-600 truncate mr-1 font-bold">{players.find(p => p.id === id)?.name}</span>
+                                  <span className="font-black text-amber-600/50 flex-shrink-0">{count}次</span>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                        <div>
-                          <span className="text-[0.7rem] font-bold text-amber-600/70 block mb-1">預計對手</span>
-                          <div className="space-y-1">
-                            {getUpcomingStats(player.id).opponents.map(([id, count]) => (
-                              <div key={id} className="text-xs flex justify-between">
-                                <span className="text-slate-600 truncate mr-1 font-bold">{players.find(p => p.id === id)?.name}</span>
-                                <span className="font-black text-amber-600/50 flex-shrink-0">{count}次</span>
-                              </div>
-                            ))}
+                          <div>
+                            <span className="text-[0.7rem] font-bold text-amber-600/70 block mb-1">預計對手</span>
+                            <div className="space-y-1">
+                              {getUpcomingStats(player.id).opponents.map(([id, count]) => (
+                                <div key={id} className="text-xs flex justify-between">
+                                  <span className="text-slate-600 truncate mr-1 font-bold">{players.find(p => p.id === id)?.name}</span>
+                                  <span className="font-black text-amber-600/50 flex-shrink-0">{count}次</span>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       </div>
+                      {!isPro && (
+                        <div
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (window.confirm("此功能僅限付費用戶使用。\n是否前往升級頁面？")) {
+                              onUpgrade();
+                            }
+                          }}
+                          className="absolute inset-0 flex flex-col items-center justify-center bg-white/10 cursor-pointer hover:bg-white/20 transition-all z-10"
+                        >
+                          <span className="text-2xl mb-1">🔒</span>
+                          <span className="text-xs font-black text-amber-800 bg-amber-100/90 px-3 py-1 rounded-full shadow-sm border border-amber-200">
+                            僅限付費用戶使用
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
 
                   {/* 歷史對戰紀錄 */}
-                  <div className="p-3 bg-slate-50 rounded-xl border border-indigo-100">
-                    <h4 className="text-xs font-black text-indigo-600 uppercase mb-2">已經對戰 (History)</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <span className="text-[0.7rem] font-bold text-slate-400 block mb-1">所有搭檔</span>
-                        <div className="space-y-1">
-                          {getPlayerStats(player.id).partners.map(([id, count]) => (
-                            <div key={id} className="text-xs flex justify-between">
-                              <span className="text-slate-600 truncate mr-1">{players.find(p => p.id === id)?.name}</span>
-                              <span className="font-black text-slate-400 flex-shrink-0">{count}次</span>
-                            </div>
-                          ))}
-                          {getPlayerStats(player.id).partners.length === 0 && <span className="text-[0.7rem] text-slate-300 italic">尚無數據</span>}
+                  <div className="relative overflow-hidden rounded-xl border border-indigo-100 bg-slate-50">
+                    <div className={`p-3 ${!isPro ? 'filter blur-md select-none opacity-60' : ''}`}>
+                      <h4 className="text-xs font-black text-indigo-600 uppercase mb-2">已經對戰 (History)</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="text-[0.7rem] font-bold text-slate-400 block mb-1">所有搭檔</span>
+                          <div className="space-y-1">
+                            {getPlayerStats(player.id).partners.map(([id, count]) => (
+                              <div key={id} className="text-xs flex justify-between">
+                                <span className="text-slate-600 truncate mr-1">{players.find(p => p.id === id)?.name}</span>
+                                <span className="font-black text-slate-400 flex-shrink-0">{count}次</span>
+                              </div>
+                            ))}
+                            {getPlayerStats(player.id).partners.length === 0 && <span className="text-[0.7rem] text-slate-300 italic">尚無數據</span>}
+                          </div>
                         </div>
-                      </div>
-                      <div>
-                        <span className="text-[0.7rem] font-bold text-slate-400 block mb-1">所有對手</span>
-                        <div className="space-y-1">
-                          {getPlayerStats(player.id).opponents.map(([id, count]) => (
-                            <div key={id} className="text-xs flex justify-between">
-                              <span className="text-slate-600 truncate mr-1">{players.find(p => p.id === id)?.name}</span>
-                              <span className="font-black text-slate-400 flex-shrink-0">{count}次</span>
-                            </div>
-                          ))}
-                          {getPlayerStats(player.id).opponents.length === 0 && <span className="text-[0.7rem] text-slate-300 italic">尚無數據</span>}
+                        <div>
+                          <span className="text-[0.7rem] font-bold text-slate-400 block mb-1">所有對手</span>
+                          <div className="space-y-1">
+                            {getPlayerStats(player.id).opponents.map(([id, count]) => (
+                              <div key={id} className="text-xs flex justify-between">
+                                <span className="text-slate-600 truncate mr-1">{players.find(p => p.id === id)?.name}</span>
+                                <span className="font-black text-slate-400 flex-shrink-0">{count}次</span>
+                              </div>
+                            ))}
+                            {getPlayerStats(player.id).opponents.length === 0 && <span className="text-[0.7rem] text-slate-300 italic">尚無數據</span>}
+                          </div>
                         </div>
                       </div>
                     </div>
+                    {!isPro && (
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm("此功能僅限付費用戶使用。\n是否前往升級頁面？")) {
+                            onUpgrade();
+                          }
+                        }}
+                        className="absolute inset-0 flex flex-col items-center justify-center bg-white/10 cursor-pointer hover:bg-white/20 transition-all z-10"
+                      >
+                        <span className="text-2xl mb-1">🔒</span>
+                        <span className="text-xs font-black text-indigo-800 bg-indigo-100/90 px-3 py-1 rounded-full shadow-sm border border-indigo-200">
+                          僅限付費用戶使用
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

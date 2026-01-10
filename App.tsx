@@ -1692,6 +1692,8 @@ const App: React.FC = () => {
                     onUpdateLevel={updatePlayerLevel}
                     onUpdateTargetGames={updatePlayerTargetGames}
                     onTogglePause={togglePlayerPause}
+                    isPro={currentUser?.isPro ?? false}
+                    onUpgrade={() => handleUpgrade()}
                   />
                 </div>
               )}
@@ -1722,6 +1724,8 @@ const App: React.FC = () => {
                 onUpdateLevel={updatePlayerLevel}
                 onUpdateTargetGames={updatePlayerTargetGames}
                 onTogglePause={togglePlayerPause}
+                isPro={currentUser?.isPro ?? false}
+                onUpgrade={() => handleUpgrade()}
               />
             </div>
 
