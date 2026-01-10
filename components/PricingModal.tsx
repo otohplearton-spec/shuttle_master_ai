@@ -104,28 +104,39 @@ const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onSelectPl
                     <div className="p-6 pt-0 border-t border-slate-100 mt-4">
                         <div className="flex flex-col gap-2">
                             <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">或是輸入邀請碼</label>
-                            <div className="flex gap-2">
+                            <div className="flex flex-col md:flex-row gap-2">
                                 <input
                                     type="text"
                                     value={invitationCode}
                                     onChange={(e) => setInvitationCode(e.target.value)}
                                     placeholder="輸入邀請碼啟用 PRO"
-                                    className="flex-1 bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2 text-slate-800 font-bold focus:outline-none focus:border-indigo-500 transition-colors"
+                                    className="flex-1 bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2 text-slate-800 font-bold focus:outline-none focus:border-indigo-500 transition-colors w-full md:w-auto"
                                     disabled={isLoading || isRedeeming}
                                 />
-                                <button
-                                    onClick={async () => {
-                                        if (!invitationCode.trim()) return;
-                                        setIsRedeeming(true);
-                                        await onRedeemCode(invitationCode);
-                                        setIsRedeeming(false);
-                                        setInvitationCode('');
-                                    }}
-                                    disabled={!invitationCode.trim() || isLoading || isRedeeming}
-                                    className="bg-slate-800 text-white px-4 py-2 rounded-xl font-bold hover:bg-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                                >
-                                    {isRedeeming ? '驗證中...' : '兌換'}
-                                </button>
+                                <div className="flex gap-2 shrink-0">
+                                    <button
+                                        onClick={async () => {
+                                            if (!invitationCode.trim()) return;
+                                            setIsRedeeming(true);
+                                            await onRedeemCode(invitationCode);
+                                            setIsRedeeming(false);
+                                            setInvitationCode('');
+                                        }}
+                                        disabled={!invitationCode.trim() || isLoading || isRedeeming}
+                                        className="bg-slate-800 text-white px-4 py-2 rounded-xl font-bold hover:bg-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex-1 md:flex-none whitespace-nowrap"
+                                    >
+                                        {isRedeeming ? '驗證中...' : '兌換'}
+                                    </button>
+                                    <a
+                                        href="https://line.me/ti/g2/wDCu4uFvyX4nQ3-B-XQ9oN0Rz20aW8X9X9X9X9" // Example Placeholder
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="bg-emerald-500 text-white px-4 py-2 rounded-xl font-bold hover:bg-emerald-600 transition-all flex items-center justify-center flex-1 md:flex-none whitespace-nowrap"
+                                        title="加入社群獲取邀請碼"
+                                    >
+                                        獲取
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
