@@ -92,13 +92,7 @@ const App: React.FC = () => {
   });
 
   // Promotion State
-  const [activePromotion, setActivePromotion] = useState<Promotion | null>({
-    planId: 'year',
-    salePrice: 199,
-    label: '🔥 測試顯示 (Test Display)',
-    startDate: '2024/01/01',
-    endDate: '2025/12/31'
-  });
+  const [activePromotion, setActivePromotion] = useState<Promotion | null>(null);
 
   // --- POPUP LOGIC EFFECT ---
   useEffect(() => {
@@ -177,12 +171,6 @@ const App: React.FC = () => {
               setCurrentUser(updated);
               localStorage.setItem('shuttle_master_user', JSON.stringify(updated));
             }
-
-            // Check Promotion
-            const promoRes = await memberService.getActivePromotion();
-            if (promoRes.success && promoRes.promotion) {
-              setActivePromotion(promoRes.promotion);
-            }
           }
         } else if (currentUser) {
           // Also re-check if user is already loaded from localstorage
@@ -195,13 +183,18 @@ const App: React.FC = () => {
               localStorage.setItem('shuttle_master_user', JSON.stringify(updated));
             }
           }
+        }
 
-          // Check Promotion (Reload)
+        // Check Promotion (Run for EVERYONE, including guests)
+        try {
           const promoRes = await memberService.getActivePromotion();
           if (promoRes.success && promoRes.promotion) {
             setActivePromotion(promoRes.promotion);
           }
+        } catch (err) {
+          console.error('Promo fetch failed', err);
         }
+
       } catch (e) {
         console.error(e);
       }
@@ -1234,7 +1227,7 @@ const App: React.FC = () => {
       {/* Promotion Banner (Full Width) */}
       <PromotionBanner
         activePromotion={activePromotion}
-        onOpenPricing={() => setShowPricingModal(true)}
+        onOpenPricing={handleUpgrade}
       />
 
       {/* Main Content Container (Centered & Padded) */}
