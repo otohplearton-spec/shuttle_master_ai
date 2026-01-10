@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Player, Gender, Court, MatchHistory, UserProfile, Promotion } from './types';
+import { Player, Gender, Court, MatchHistory, UserProfile, Promotion, SortAlgorithm } from './types';
 import AddPlayerForm from './components/AddPlayerForm';
 import PlayerList from './components/PlayerList';
 import CourtCard from './components/CourtCard';
@@ -862,7 +862,7 @@ const App: React.FC = () => {
    * --- 核心演算法：本地智慧排點 (極致平衡場次版) ---
    */
   // ... (keep generateSmartRound exactly as is, but it's inside component, so we just use the existing one)
-  const generateSmartRound = (currentPlayers: Player[], currentHistory: MatchHistory[], queueSoFar: string[][]): string[] | null => {
+  const generateSmartRound = (currentPlayers: Player[], currentHistory: MatchHistory[], queueSoFar: string[][], algorithm: SortAlgorithm = 'normal'): string[] | null => {
     // 智慧排點不再排除正在場上的球員，而是將他們一併納入考量
     // 但會透過 projectedGames 增加場次權重，避免他們如果正在打，還被排在很前面
     const available = currentPlayers.filter(p => !p.isPaused);
@@ -895,10 +895,6 @@ const App: React.FC = () => {
       if (finishedA !== finishedB) {
         return finishedA ? 1 : -1;
       }
-
-
-
-
 
       // 如果都未達標 -> 優先滿足「剩餘場次需求 (Deficit)」較大者
       // 例如：A(0/7) 剩7, B(0/6) 剩6 -> A 優先
@@ -941,18 +937,40 @@ const App: React.FC = () => {
       let penalty = 0;
       const team1Ids = comb[0];
       const team2Ids = comb[1];
-      const lv1 = (selectedPlayers.find(p => p.id === team1Ids[0])?.level || 0) + (selectedPlayers.find(p => p.id === team1Ids[1])?.level || 0);
-      const lv2 = (selectedPlayers.find(p => p.id === team2Ids[0])?.level || 0) + (selectedPlayers.find(p => p.id === team2Ids[1])?.level || 0);
+      const p1 = selectedPlayers.find(p => p.id === team1Ids[0]);
+      const p2 = selectedPlayers.find(p => p.id === team1Ids[1]);
+      const p3 = selectedPlayers.find(p => p.id === team2Ids[0]);
+      const p4 = selectedPlayers.find(p => p.id === team2Ids[1]);
+
+      const lv1 = (p1?.level || 0) + (p2?.level || 0);
+      const lv2 = (p3?.level || 0) + (p4?.level || 0);
+
+      // 1. Level Balance Penalty (Base)
       penalty += Math.abs(lv1 - lv2) * 2;
+
+      // 2. Algorithm Specific Logic
+      if (algorithm === 'mixed') {
+        // Mixed Doubles Priority: Penalize same-gender teams heavily
+        const isTeam1Mixed = p1?.gender !== p2?.gender;
+        const isTeam2Mixed = p3?.gender !== p4?.gender;
+        if (!isTeam1Mixed) penalty += 500;
+        if (!isTeam2Mixed) penalty += 500;
+      }
+
+      // 3. History Penalties
+      const partnerPenaltyWeight = algorithm === 'avoid_repeat' ? 200 : 15;
+      const opponentPenaltyWeight = algorithm === 'avoid_repeat' ? 100 : 5;
+      const queuePenaltyWeight = algorithm === 'avoid_repeat' ? 300 : 20;
+
       recentHistory.forEach(h => {
         h.teams.forEach(t => {
-          if (t.includes(team1Ids[0]) && t.includes(team1Ids[1])) penalty += 15;
-          if (t.includes(team2Ids[0]) && t.includes(team2Ids[1])) penalty += 15;
+          if (t.includes(team1Ids[0]) && t.includes(team1Ids[1])) penalty += partnerPenaltyWeight;
+          if (t.includes(team2Ids[0]) && t.includes(team2Ids[1])) penalty += partnerPenaltyWeight;
         });
       });
       queueSoFar.forEach(m => {
-        if ((m[0] === team1Ids[0] && m[1] === team1Ids[1]) || (m[0] === team1Ids[1] && m[1] === team1Ids[0])) penalty += 20;
-        if ((m[2] === team2Ids[0] && m[3] === team2Ids[1]) || (m[2] === team2Ids[1] && m[3] === team2Ids[0])) penalty += 20;
+        if ((m[0] === team1Ids[0] && m[1] === team1Ids[1]) || (m[0] === team1Ids[1] && m[1] === team1Ids[0])) penalty += queuePenaltyWeight;
+        if ((m[2] === team2Ids[0] && m[3] === team2Ids[1]) || (m[2] === team2Ids[1] && m[3] === team2Ids[0])) penalty += queuePenaltyWeight;
       });
       recentHistory.forEach(h => {
         const hT1 = h.teams[0];
@@ -961,8 +979,9 @@ const App: React.FC = () => {
           (hT1.includes(team1Ids[0]) && hT2.includes(team2Ids[1])) ||
           (hT2.includes(team1Ids[0]) && hT1.includes(team2Ids[0])) ||
           (hT2.includes(team1Ids[0]) && hT1.includes(team2Ids[1]));
-        if (isOpponentInHistory) penalty += 5;
+        if (isOpponentInHistory) penalty += opponentPenaltyWeight;
       });
+
       if (penalty < minPenalty) {
         minPenalty = penalty;
         bestCombination = comb;
@@ -992,12 +1011,12 @@ const App: React.FC = () => {
     }
   };
 
-  const normalScheduleQueue = (roundsRequested: number = 5) => {
+  const normalScheduleQueue = (roundsRequested: number = 5, algorithm: SortAlgorithm = 'normal') => {
     if (players.length < 4) return;
     const newRounds: string[][] = [];
     let currentQueueState = [...matchQueue];
     for (let i = 0; i < roundsRequested; i++) {
-      const round = generateSmartRound(players, history, currentQueueState);
+      const round = generateSmartRound(players, history, currentQueueState, algorithm);
       if (round) {
         newRounds.push(round);
         currentQueueState.push(round);

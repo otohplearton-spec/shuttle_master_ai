@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Player, Gender, Court, MatchHistory } from '../types';
+import { Player, Gender, Court, MatchHistory, SortAlgorithm } from '../types';
 
 interface MatchQueueProps {
   queue: string[][];
@@ -28,6 +28,25 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
   availableCourts, onAssignToCourt, onAutoAssignAll, onClose
 }) => {
   const [swappingIdx, setSwappingIdx] = useState<{ qIdx: number, pIdx: number } | null>(null);
+  const [sortAlgorithm, setSortAlgorithm] = useState<SortAlgorithm>('normal');
+
+  const algorithmLabels: Record<SortAlgorithm, string> = {
+    'normal': '普通智排',
+    'mixed': '混雙優先',
+    'avoid_repeat': '避免重複'
+  };
+
+  const cycleAlgorithm = (direction: 'up' | 'down') => {
+    const modes: SortAlgorithm[] = ['normal', 'mixed', 'avoid_repeat'];
+    const currentIdx = modes.indexOf(sortAlgorithm);
+    let newIdx;
+    if (direction === 'up') {
+      newIdx = (currentIdx - 1 + modes.length) % modes.length;
+    } else {
+      newIdx = (currentIdx + 1) % modes.length;
+    }
+    setSortAlgorithm(modes[newIdx]);
+  };
 
   React.useEffect(() => {
     const activePlayers = allPlayers.filter(p => !p.isPaused);
@@ -158,13 +177,31 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
                 </button>
               </div>
               <div className="flex-1 flex gap-2">
-                <button
-                  onClick={handleNormalSchedule}
-                  disabled={isScheduling || allPlayers.length < 4}
-                  className="flex-1 bg-white border-2 border-indigo-600 text-indigo-600 py-2 rounded-xl font-black text-xs hover:bg-indigo-50 transition-all disabled:opacity-50"
-                >
-                  普通智排
-                </button>
+                <div className="flex-1 bg-white border-2 border-indigo-600 rounded-xl flex items-stretch overflow-hidden hover:shadow-md transition-shadow">
+                  {/* Arrow Controls */}
+                  <div className="flex flex-col border-r border-indigo-100 w-5">
+                    <button
+                      onClick={() => cycleAlgorithm('up')}
+                      className="flex-1 hover:bg-indigo-50 flex items-center justify-center text-[8px] text-indigo-400 font-bold active:bg-indigo-100 leading-none"
+                    >▲</button>
+                    <button
+                      onClick={() => cycleAlgorithm('down')}
+                      className="flex-1 hover:bg-indigo-50 flex items-center justify-center text-[8px] text-indigo-400 font-bold active:bg-indigo-100 leading-none border-t border-indigo-50"
+                    >▼</button>
+                  </div>
+                  {/* Main Action Area */}
+                  <button
+                    onClick={() => {
+                      if (window.confirm(`確定要執行「${algorithmLabels[sortAlgorithm]}」嗎？`)) {
+                        (onNormalSchedule as any)(roundsToSchedule, sortAlgorithm);
+                      }
+                    }}
+                    disabled={isScheduling || allPlayers.length < 4}
+                    className="flex-1 flex flex-col items-center justify-center py-1 hover:bg-indigo-50 transition-colors active:bg-indigo-100 disabled:opacity-50"
+                  >
+                    <span className="font-black text-xs text-indigo-600 leading-tight">{algorithmLabels[sortAlgorithm]}</span>
+                  </button>
+                </div>
                 <button
                   onClick={() => onSchedule(roundsToSchedule)}
                   disabled={isScheduling || allPlayers.length < 4}
