@@ -5,7 +5,7 @@ export enum Gender {
   OTHER = '其他'
 }
 
-export type SortAlgorithm = 'normal' | 'mixed' | 'avoid_repeat';
+export type SortAlgorithm = 'normal' | 'mixed' | 'avoid_repeat' | 'ai';
 
 export interface Player {
   id: string;

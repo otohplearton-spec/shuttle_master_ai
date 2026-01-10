@@ -33,11 +33,12 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
   const algorithmLabels: Record<SortAlgorithm, string> = {
     'normal': '普通智排',
     'mixed': '混雙優先',
-    'avoid_repeat': '避免重複'
+    'avoid_repeat': '避免重複',
+    'ai': 'AI 智慧排點'
   };
 
   const cycleAlgorithm = (direction: 'up' | 'down') => {
-    const modes: SortAlgorithm[] = ['normal', 'mixed', 'avoid_repeat'];
+    const modes: SortAlgorithm[] = ['normal', 'mixed', 'avoid_repeat', 'ai'];
     const currentIdx = modes.indexOf(sortAlgorithm);
     let newIdx;
     if (direction === 'up') {
@@ -47,6 +48,10 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
     }
     setSortAlgorithm(modes[newIdx]);
   };
+
+  // ... existing code ...
+
+
 
   React.useEffect(() => {
     const activePlayers = allPlayers.filter(p => !p.isPaused);
@@ -177,38 +182,46 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
                 </button>
               </div>
               <div className="flex-1 flex gap-2">
-                <div className="flex-1 bg-white border-2 border-indigo-600 rounded-xl flex items-stretch overflow-hidden hover:shadow-md transition-shadow">
+                <div className={`flex-1 rounded-xl flex items-stretch overflow-hidden transition-all shadow-md active:scale-95 duration-200 border-2 ${sortAlgorithm === 'ai'
+                  ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 border-transparent shadow-purple-200'
+                  : 'bg-indigo-600 border-indigo-600 shadow-indigo-200'
+                  }`}>
                   {/* Arrow Controls */}
-                  <div className="flex flex-col border-r border-indigo-100 w-5">
+                  <div className="flex flex-col border-r border-white/20 w-8">
                     <button
                       onClick={() => cycleAlgorithm('up')}
-                      className="flex-1 hover:bg-indigo-50 flex items-center justify-center text-[8px] text-indigo-400 font-bold active:bg-indigo-100 leading-none"
+                      className="flex-1 hover:bg-white/20 flex items-center justify-center text-[10px] text-white/90 font-black leading-none transition-colors"
                     >▲</button>
                     <button
                       onClick={() => cycleAlgorithm('down')}
-                      className="flex-1 hover:bg-indigo-50 flex items-center justify-center text-[8px] text-indigo-400 font-bold active:bg-indigo-100 leading-none border-t border-indigo-50"
+                      className="flex-1 hover:bg-white/20 flex items-center justify-center text-[10px] text-white/90 font-black leading-none border-t border-white/20 transition-colors"
                     >▼</button>
                   </div>
                   {/* Main Action Area */}
                   <button
                     onClick={() => {
-                      if (window.confirm(`確定要執行「${algorithmLabels[sortAlgorithm]}」嗎？`)) {
-                        (onNormalSchedule as any)(roundsToSchedule, sortAlgorithm);
+                      const label = algorithmLabels[sortAlgorithm];
+                      if (window.confirm(`確定要執行「${label}」嗎？`)) {
+                        if (sortAlgorithm === 'ai') {
+                          onSchedule(roundsToSchedule);
+                        } else {
+                          (onNormalSchedule as any)(roundsToSchedule, sortAlgorithm);
+                        }
                       }
                     }}
                     disabled={isScheduling || allPlayers.length < 4}
-                    className="flex-1 flex flex-col items-center justify-center py-1 hover:bg-indigo-50 transition-colors active:bg-indigo-100 disabled:opacity-50"
+                    className="flex-1 flex flex-col items-center justify-center hover:bg-white/10 transition-colors disabled:opacity-50 py-1"
                   >
-                    <span className="font-black text-xs text-indigo-600 leading-tight">{algorithmLabels[sortAlgorithm]}</span>
+                    <span className="font-black text-[15px] leading-tight text-white tracking-wide">
+                      {algorithmLabels[sortAlgorithm]}
+                    </span>
+                    <span className="text-[10px] text-white/90 font-bold mt-0.5">
+                      {sortAlgorithm === 'ai' ? 'GEMINI POWERED' :
+                        sortAlgorithm === 'mixed' ? 'MIXED DOUBLES' :
+                          sortAlgorithm === 'avoid_repeat' ? 'AVOID REPEATS' : 'LEVEL BALANCE'}
+                    </span>
                   </button>
                 </div>
-                <button
-                  onClick={() => onSchedule(roundsToSchedule)}
-                  disabled={isScheduling || allPlayers.length < 4}
-                  className="flex-1 bg-indigo-600 text-white py-2 rounded-xl font-black text-xs shadow-md hover:bg-indigo-700 transition-all disabled:opacity-50"
-                >
-                  AI 智排
-                </button>
               </div>
             </div>
 
