@@ -392,6 +392,8 @@ const App: React.FC = () => {
   const [showPricingModal, setShowPricingModal] = useState(false);
 
 
+  const [isMobileHeaderVisible, setIsMobileHeaderVisible] = useState(true);
+
   const handleLogin = (user: UserProfile) => {
     setCurrentUser(user);
     localStorage.setItem('shuttle_master_user', JSON.stringify(user));
@@ -1254,7 +1256,7 @@ const App: React.FC = () => {
         <div className="w-full max-w-[1700px] flex flex-col h-full bg-transparent">
 
           <header className="flex-shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 md:mb-8 pt-4 md:pt-0 px-4 md:px-0">
-            <div className="flex items-center gap-4">
+            <div className={`flex items-center gap-4 ${!isMobileHeaderVisible ? 'hidden lg:flex' : 'flex'}`}>
               {/* Use Avatar */}
               {currentUser.pictureUrl ? (
                 <img src={currentUser.pictureUrl} alt={currentUser.displayName} className="w-12 h-12 rounded-full border-2 border-white shadow-md hidden lg:block" />
@@ -1390,6 +1392,21 @@ const App: React.FC = () => {
                 </button>
                 <button onClick={addCourt} className="p-1.5 rounded-xl bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all font-black text-lg w-[44px] h-[44px] flex items-center justify-center">
                   ＋
+                </button>
+                {/* Header Collapse Toggle */}
+                <button
+                  onClick={() => setIsMobileHeaderVisible(!isMobileHeaderVisible)}
+                  className="p-1.5 rounded-xl bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all"
+                >
+                  {isMobileHeaderVisible ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  )}
                 </button>
                 <div className="bg-slate-800 text-white px-3 py-2 rounded-2xl flex items-baseline gap-1 shadow-xl border-2 border-slate-700/50">
                   <span className="text-[10px] font-bold opacity-60 uppercase tracking-widest leading-none">Games</span>
