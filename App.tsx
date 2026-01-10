@@ -1932,6 +1932,8 @@ const App: React.FC = () => {
                     onAssignToCourt={assignMatchToCourt}
                     onAutoAssignAll={autoAssignAllEmptyCourts}
                     onClose={() => setActiveMobileView('none')}
+                    isPro={currentUser?.isPro ?? false}
+                    onUpgrade={() => handleUpgrade()}
                   />
                 )}
               </div>
