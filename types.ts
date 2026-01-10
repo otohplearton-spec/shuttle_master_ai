@@ -43,3 +43,12 @@ export interface UserProfile {
   isPro: boolean;
   expiryDate?: string;
 }
+
+
+export interface Promotion {
+  planId: string;
+  salePrice: number;
+  label: string;
+  startDate?: string;
+  endDate?: string;
+}

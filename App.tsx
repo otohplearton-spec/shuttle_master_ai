@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Player, Gender, Court, MatchHistory, UserProfile } from './types';
+import { Player, Gender, Court, MatchHistory, UserProfile, Promotion } from './types';
 import AddPlayerForm from './components/AddPlayerForm';
 import PlayerList from './components/PlayerList';
 import CourtCard from './components/CourtCard';
@@ -90,6 +90,9 @@ const App: React.FC = () => {
     } catch { return null; }
   });
 
+  // Promotion State
+  const [activePromotion, setActivePromotion] = useState<Promotion | null>(null);
+
   // --- POPUP LOGIC EFFECT ---
   useEffect(() => {
     if (!isPopupMode) return;
@@ -167,6 +170,12 @@ const App: React.FC = () => {
               setCurrentUser(updated);
               localStorage.setItem('shuttle_master_user', JSON.stringify(updated));
             }
+
+            // Check Promotion
+            const promoRes = await memberService.getActivePromotion();
+            if (promoRes.success && promoRes.promotion) {
+              setActivePromotion(promoRes.promotion);
+            }
           }
         } else if (currentUser) {
           // Also re-check if user is already loaded from localstorage
@@ -178,6 +187,12 @@ const App: React.FC = () => {
               setCurrentUser(updated);
               localStorage.setItem('shuttle_master_user', JSON.stringify(updated));
             }
+          }
+
+          // Check Promotion (Reload)
+          const promoRes = await memberService.getActivePromotion();
+          if (promoRes.success && promoRes.promotion) {
+            setActivePromotion(promoRes.promotion);
           }
         }
       } catch (e) {
@@ -1924,6 +1939,7 @@ const App: React.FC = () => {
         onSelectPlan={handleSelectPlan}
         onRedeemCode={handleRedeemCode}
         isLoading={paymentStatus === 'processing'}
+        activePromotion={activePromotion}
       />
 
     </div >

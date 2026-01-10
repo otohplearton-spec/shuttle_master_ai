@@ -1,3 +1,5 @@
+import { Promotion } from '../types';
+
 export const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-a7DQ1XN1fIV2WzpvsMa6f8KThKKR6OuTciWITU0XlmI9mte8XndXsEtkJxEP_xSt/exec';
 
 export interface MemberStatus {
@@ -132,6 +134,52 @@ export const memberService = {
         } catch (error: any) {
             console.error('Redeem code failed', error);
             return { success: false, message: error.message };
+        }
+    },
+
+    /**
+     * Get active seasonal promotion
+     */
+    getActivePromotion: async (): Promise<{ success: boolean; promotion: Promotion | null }> => {
+        const CACHE_KEY = 'shuttle_active_promo_v4';
+        const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
+
+        // 1. Check Cache
+        try {
+            const cached = localStorage.getItem(CACHE_KEY);
+            if (cached) {
+                const { promotion, timestamp } = JSON.parse(cached);
+                if (Date.now() - timestamp < CACHE_DURATION) {
+                    return { success: true, promotion };
+                }
+            }
+        } catch (e) {
+            console.error('Cache read error', e);
+        }
+
+        // 2. Fetch Fresh
+        try {
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({
+                    action: 'get_active_promotion'
+                })
+            });
+            const data = await response.json();
+
+            // 3. Update Cache if success
+            if (data.success) {
+                localStorage.setItem(CACHE_KEY, JSON.stringify({
+                    promotion: data.promotion,
+                    timestamp: Date.now()
+                }));
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Get active promotion failed', error);
+            return { success: false, promotion: null };
         }
     }
 };

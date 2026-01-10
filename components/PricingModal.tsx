@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Promotion } from '../types';
 
 export interface PricingPlan {
     id: string;
@@ -21,9 +22,10 @@ interface PricingModalProps {
     onSelectPlan: (plan: PricingPlan) => void;
     onRedeemCode?: (code: string) => Promise<boolean>;
     isLoading: boolean;
+    activePromotion?: Promotion | null;
 }
 
-const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onSelectPlan, onRedeemCode, isLoading }) => {
+const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onSelectPlan, onRedeemCode, isLoading, activePromotion }) => {
     const [invitationCode, setInvitationCode] = useState('');
     const [isRedeeming, setIsRedeeming] = useState(false);
 
@@ -47,33 +49,54 @@ const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onSelectPl
 
                 {/* Body */}
                 <div className="p-6 overflow-y-auto space-y-4">
-                    {PLANS.map((plan) => (
-                        <button
-                            key={plan.id}
-                            disabled={isLoading}
-                            onClick={() => onSelectPlan(plan)}
-                            className={`w-full group relative flex items-center justify-between p-4 rounded-2xl border-2 transition-all
-                  ${plan.tag ? 'border-indigo-600 bg-indigo-50/50 hover:bg-indigo-50' : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50'}
+                    {PLANS.map((plan) => {
+                        const isPromo = activePromotion && activePromotion.planId === plan.id;
+                        const displayPrice = isPromo ? activePromotion.salePrice : plan.price;
+
+                        // Calculate dynamic savings label
+                        let displayLabel = plan.label;
+                        if (isPromo && plan.id === 'year') {
+                            const savings = 360 - activePromotion.salePrice;
+                            displayLabel = `狂省 $${savings}`;
+                        }
+
+                        return (
+                            <button
+                                key={plan.id}
+                                disabled={isLoading}
+                                onClick={() => onSelectPlan({ ...plan, price: displayPrice })}
+                                className={`w-full group relative flex items-center justify-between p-4 rounded-2xl border-2 transition-all
+                  ${(plan.tag || isPromo) ? 'border-indigo-600 bg-indigo-50/50 hover:bg-indigo-50' : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50'}
                   ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
                 `}
-                        >
-                            {plan.tag && (
-                                <span className="absolute -top-3 left-4 bg-indigo-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm">
-                                    {plan.tag}
-                                </span>
-                            )}
+                            >
+                                {(plan.tag || isPromo) && (
+                                    <span className={`absolute -top-3 left-4 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm ${isPromo ? 'bg-red-500' : 'bg-indigo-600'}`}>
+                                        {isPromo ? activePromotion.label : plan.tag}
+                                    </span>
+                                )}
 
-                            <div className="text-left">
-                                <div className="text-xs text-slate-400 font-bold mb-0.5">{plan.label}</div>
-                                <div className="text-lg font-black text-slate-800">{plan.name}</div>
-                            </div>
+                                <div className="text-left">
+                                    <div className={`text-xs font-bold mb-0.5 ${isPromo ? 'text-red-500 animate-pulse' : 'text-slate-400'}`}>
+                                        {displayLabel}
+                                    </div>
+                                    <div className="text-lg font-black text-slate-800">{plan.name}</div>
+                                </div>
 
-                            <div className="flex items-baseline gap-1">
-                                <span className="text-2xl font-black text-indigo-600">${plan.price}</span>
-                                <span className="text-xs text-slate-400 font-bold">TWD</span>
-                            </div>
-                        </button>
-                    ))}
+                                <div className="flex flex-col items-end">
+                                    {isPromo && (
+                                        <span className="text-xs font-bold text-slate-400 line-through decoration-red-500 decoration-2">
+                                            ${plan.price}
+                                        </span>
+                                    )}
+                                    <div className={`flex items-baseline gap-1 ${isPromo ? 'text-red-600' : 'text-indigo-600'}`}>
+                                        <span className="text-2xl font-black">${displayPrice}</span>
+                                        <span className={`text-xs font-bold ${isPromo ? 'text-red-400' : 'text-slate-400'}`}>TWD</span>
+                                    </div>
+                                </div>
+                            </button>
+                        )
+                    })}
                 </div>
 
                 {/* Invitation Code Section */}
