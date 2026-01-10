@@ -19,13 +19,15 @@ interface MatchQueueProps {
   availableCourts: Court[];
   onAssignToCourt: (courtId: string, queueIndex: number) => void;
   onAutoAssignAll: () => void;
-  onClose?: () => void; // Added for Mobile Header consistency
+  onClose?: () => void;
+  isPro: boolean;
+  onUpgrade: () => void;
 }
 
 const MatchQueue: React.FC<MatchQueueProps> = ({
   queue, allPlayers, history, busyPlayerIds, playingPlayerIds,
   onSchedule, onNormalSchedule, onAddBlankMatch, onManualSchedule, onRemove, onReorder, onSwapPlayer, isScheduling,
-  availableCourts, onAssignToCourt, onAutoAssignAll, onClose
+  availableCourts, onAssignToCourt, onAutoAssignAll, onClose, isPro, onUpgrade
 }) => {
   const [swappingIdx, setSwappingIdx] = useState<{ qIdx: number, pIdx: number } | null>(null);
   const [sortAlgorithm, setSortAlgorithm] = useState<SortAlgorithm>('normal');
@@ -184,22 +186,40 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
               <div className="flex-1 flex gap-2">
                 <div className={`flex-1 rounded-xl flex items-stretch overflow-hidden transition-all shadow-md active:scale-95 duration-200 border-2 ${sortAlgorithm === 'ai'
                   ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 border-transparent shadow-purple-200'
-                  : 'bg-indigo-600 border-indigo-600 shadow-indigo-200'
+                  : 'bg-white border-indigo-600 shadow-indigo-100'
                   }`}>
                   {/* Arrow Controls */}
-                  <div className="flex flex-col border-r border-white/20 w-8">
+                  <div className={`flex flex-col w-8 border-r ${sortAlgorithm === 'ai'
+                    ? 'border-white/20'
+                    : 'border-indigo-100'
+                    }`}>
                     <button
                       onClick={() => cycleAlgorithm('up')}
-                      className="flex-1 hover:bg-white/20 flex items-center justify-center text-[10px] text-white/90 font-black leading-none transition-colors"
+                      className={`flex-1 flex items-center justify-center text-[10px] font-black leading-none transition-colors ${sortAlgorithm === 'ai'
+                        ? 'text-white/90 hover:bg-white/20'
+                        : 'text-indigo-300 hover:bg-indigo-50 hover:text-indigo-600'
+                        }`}
                     >▲</button>
                     <button
                       onClick={() => cycleAlgorithm('down')}
-                      className="flex-1 hover:bg-white/20 flex items-center justify-center text-[10px] text-white/90 font-black leading-none border-t border-white/20 transition-colors"
+                      className={`flex-1 flex items-center justify-center text-[10px] font-black leading-none border-t transition-colors ${sortAlgorithm === 'ai'
+                        ? 'text-white/90 hover:bg-white/20 border-white/20'
+                        : 'text-indigo-300 hover:bg-indigo-50 hover:text-indigo-600 border-indigo-100'
+                        }`}
                     >▼</button>
                   </div>
                   {/* Main Action Area */}
                   <button
                     onClick={() => {
+                      // Premium Check
+                      const isPremiumAlgo = ['ai', 'mixed', 'avoid_repeat'].includes(sortAlgorithm);
+                      if (isPremiumAlgo && !isPro) {
+                        if (window.confirm(`「${algorithmLabels[sortAlgorithm]}」僅限付費用戶使用。\n是否前往升級頁面？`)) {
+                          onUpgrade();
+                        }
+                        return;
+                      }
+
                       const label = algorithmLabels[sortAlgorithm];
                       if (window.confirm(`確定要執行「${label}」嗎？`)) {
                         if (sortAlgorithm === 'ai') {
@@ -210,12 +230,15 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
                       }
                     }}
                     disabled={isScheduling || allPlayers.length < 4}
-                    className="flex-1 flex flex-col items-center justify-center hover:bg-white/10 transition-colors disabled:opacity-50 py-1"
+                    className={`flex-1 flex flex-col items-center justify-center transition-colors disabled:opacity-50 py-1 ${sortAlgorithm === 'ai' ? 'hover:bg-white/10' : 'hover:bg-indigo-50'
+                      }`}
                   >
-                    <span className="font-black text-[15px] leading-tight text-white tracking-wide">
+                    <span className={`font-black text-[15px] leading-tight tracking-wide ${sortAlgorithm === 'ai' ? 'text-white' : 'text-indigo-700'
+                      }`}>
                       {algorithmLabels[sortAlgorithm]}
                     </span>
-                    <span className="text-[10px] text-white/90 font-bold mt-0.5">
+                    <span className={`text-[10px] font-bold mt-0.5 ${sortAlgorithm === 'ai' ? 'text-white/90' : 'text-indigo-400'
+                      }`}>
                       {sortAlgorithm === 'ai' ? 'GEMINI POWERED' :
                         sortAlgorithm === 'mixed' ? 'MIXED DOUBLES' :
                           sortAlgorithm === 'avoid_repeat' ? 'AVOID REPEATS' : 'LEVEL BALANCE'}

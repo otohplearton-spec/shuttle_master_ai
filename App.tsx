@@ -1879,6 +1879,8 @@ const App: React.FC = () => {
                 availableCourts={courts.filter(c => !c.isActive)}
                 onAssignToCourt={assignMatchToCourt}
                 onAutoAssignAll={autoAssignAllEmptyCourts}
+                isPro={currentUser?.isPro ?? false}
+                onUpgrade={() => handleUpgrade()}
               />
             </div>
 
