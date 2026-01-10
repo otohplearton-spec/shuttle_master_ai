@@ -669,8 +669,8 @@ const App: React.FC = () => {
 
   const addCourt = () => {
     // PRO Feature: Limit courts for non-pro users
-    if (courts.length >= 1 && !currentUser?.isPro) {
-      if (window.confirm("✨ 進階功能提示\n\n一般會員僅限使用 1 面場地。\n\n是否立即升級 PRO 會員以解鎖無限場地？")) {
+    if (courts.length >= 2 && !currentUser?.isPro) {
+      if (window.confirm("✨ 進階功能提示\n\n一般會員僅限使用 2 面場地。\n\n是否立即升級 PRO 會員以解鎖無限場地？")) {
         handleUpgrade();
       }
       return;
