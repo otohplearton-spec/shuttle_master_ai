@@ -16,6 +16,7 @@ import { memberService } from './services/memberService';
 import { ecpayService } from './services/ecpayService';
 import ECPayForm, { ECPayPaymentData } from './components/ECPayForm';
 import PricingModal, { PricingPlan } from './components/PricingModal';
+import PromotionBanner from './components/PromotionBanner';
 
 
 // GLOBAL ERROR HANDLER FOR MOBILE DEBUGGING
@@ -91,7 +92,13 @@ const App: React.FC = () => {
   });
 
   // Promotion State
-  const [activePromotion, setActivePromotion] = useState<Promotion | null>(null);
+  const [activePromotion, setActivePromotion] = useState<Promotion | null>({
+    planId: 'year',
+    salePrice: 199,
+    label: '🔥 測試顯示 (Test Display)',
+    startDate: '2024/01/01',
+    endDate: '2025/12/31'
+  });
 
   // --- POPUP LOGIC EFFECT ---
   useEffect(() => {
@@ -1222,727 +1229,738 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="h-[100dvh] bg-slate-100 text-slate-900 md:p-8 flex flex-col items-center overflow-hidden">
-      <div className="w-full max-w-[1700px] flex flex-col h-full">
-        <header className="flex-shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 md:mb-8 pt-4 md:pt-0 px-4 md:px-0">
-          <div className="flex items-center gap-4">
-            {/* Use Avatar */}
-            {currentUser.pictureUrl ? (
-              <img src={currentUser.pictureUrl} alt={currentUser.displayName} className="w-12 h-12 rounded-full border-2 border-white shadow-md hidden lg:block" />
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-indigo-500 hidden lg:flex items-center justify-center text-xl text-white font-bold shadow-md">
-                {currentUser.displayName.charAt(0)}
-              </div>
-            )}
-            <div>
-              <h1 className="text-4xl font-black bg-gradient-to-br from-indigo-600 to-blue-500 bg-clip-text text-transparent italic tracking-tighter">
-                SHUTTLE MASTER AI
-              </h1>
-              <div className="flex items-center gap-2">
-                <p className="text-slate-400 font-bold tracking-widest text-xs uppercase">Centralized Smart Queue System</p>
-                <span className="hidden lg:inline-block w-1 h-1 bg-slate-300 rounded-full"></span>
-                <p className="hidden lg:block text-slate-500 text-xs font-bold">Hi, {currentUser.displayName}</p>
-                {currentUser.isPro && (
-                  <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md ml-2 shadow-sm border border-amber-200 tracking-wider">
-                    PRO
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
+    <div className="h-[100dvh] bg-slate-100 text-slate-900 flex flex-col overflow-hidden">
 
-          <div className="flex flex-wrap items-center gap-4">
-            {/* 計分模式開關 (Desktop Only) */}
-            <div className="hidden lg:flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:border-amber-200">
-              <div className={`p-1.5 rounded-lg transition-colors ${isScoreEnabled ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-400'}`}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-7.535 5.503a1 1 0 101.07 1.683c.852-.54 2.117-.824 3.465-.824s2.613.284 3.465.824a1 1 0 001.07-1.683C14.306 13.05 12.585 12.5 10.5 12.5s-3.806.55-5.035 1.503z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black text-slate-400 leading-none mb-0.5">計分模式</span>
-                <span className={`text-[11px] font-bold leading-none ${isScoreEnabled ? 'text-amber-600' : 'text-slate-500'}`}>
-                  {isScoreEnabled ? '已開啟' : '已關閉'}
-                </span>
-              </div>
-              <button
-                onClick={() => setIsScoreEnabled(!isScoreEnabled)}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isScoreEnabled ? 'bg-amber-500' : 'bg-slate-200'}`}
-              >
-                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isScoreEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
-              </button>
-            </div>
+      {/* Promotion Banner (Full Width) */}
+      <PromotionBanner
+        activePromotion={activePromotion}
+        onOpenPricing={() => setShowPricingModal(true)}
+      />
 
-            {/* 語音廣播開關 (Desktop Only) */}
-            <div className="hidden lg:flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:border-indigo-200">
-              <div className={`p-1.5 rounded-lg transition-colors ${isAutoBroadcastEnabled ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}>
-                {isAutoBroadcastEnabled ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A9.954 9.954 0 0019 10a9.972 9.972 0 00-2.929-7.071 1 1 0 00-1.414 1.414A7.971 7.971 0 0117 10c0 1.258-.29 2.448-.807 3.507l-1.456-1.456A5.982 5.982 0 0015 10a5.983 5.983 0 00-1.757-4.243 1 1 0 00-1.415 1.415A3.983 3.983 0 0113 10c0 .64-.15 1.245-.417 1.783L3.707 2.293zM10 4v3.293L6.707 4H10z" clipRule="evenodd" /><path d="M10 16v-3.293l3.293 3.293H10zM1.707 15.293l14-14L14.293 2.707l-14 14 1.414 1.414z" /></svg>
-                )}
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black text-slate-400 leading-none mb-0.5">自動廣播</span>
-                <span className={`text-[11px] font-bold leading-none ${isAutoBroadcastEnabled ? 'text-indigo-600' : 'text-slate-500'}`}>
-                  {isAutoBroadcastEnabled ? '已開啟' : '已關閉'}
-                </span>
-              </div>
-              <button
-                onClick={() => setIsAutoBroadcastEnabled(!isAutoBroadcastEnabled)}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isAutoBroadcastEnabled ? 'bg-indigo-600' : 'bg-slate-200'}`}
-              >
-                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isAutoBroadcastEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
-              </button>
-            </div>
+      {/* Main Content Container (Centered & Padded) */}
+      <div className="flex-1 w-full flex flex-col items-center md:p-8 overflow-hidden min-h-0">
+        <div className="w-full max-w-[1700px] flex flex-col h-full bg-transparent">
 
-            {/* Auto Assign (Desktop Only) */}
-            <div className="hidden lg:flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:border-emerald-200">
-              <div className={`p-1.5 rounded-lg transition-colors ${isAutoAssignEnabled ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black text-slate-400 leading-none mb-0.5">自動上場 ({autoAssignInterval}s)</span>
-                <span className={`text-[11px] font-bold leading-none ${isAutoAssignEnabled ? 'text-emerald-600' : 'text-slate-500'}`}>
-                  {isAutoAssignEnabled ? '開啟中' : '已關閉'}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setIsAutoAssignEnabled(!isAutoAssignEnabled)}
-                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isAutoAssignEnabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
-                >
-                  <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isAutoAssignEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
-                </button>
-                {isAutoAssignEnabled && (
-                  <input
-                    type="number"
-                    min="2"
-                    max="60"
-                    value={autoAssignInterval}
-                    onChange={(e) => setAutoAssignInterval(Math.max(2, Math.min(60, Number(e.target.value))))}
-                    className="w-12 h-6 text-xs text-center border border-slate-200 rounded-md focus:outline-none focus:border-emerald-500"
-                  />
-                )}
-              </div>
-            </div>
-
-            {/* Mobile Menu Button (Docked) */}
-            {/* Mobile Header Toolbar: Menu, Players, Queue, Add, Games */}
-            <div className="lg:hidden flex items-center gap-2">
-              <button
-                onClick={() => setActiveMobileView('menu')}
-                className="p-1.5 rounded-xl bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all"
-                aria-label="Menu"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-              <button
-                onClick={() => setActiveMobileView('players')}
-                className="p-1.5 rounded-xl bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all"
-                aria-label="Players"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              </button>
-              <button
-                onClick={() => setActiveMobileView('queue')}
-                className="p-1.5 rounded-xl bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all"
-                aria-label="Queue"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </button>
-              <button onClick={addCourt} className="p-1.5 rounded-xl bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all font-black text-lg w-[44px] h-[44px] flex items-center justify-center">
-                ＋
-              </button>
-              <div className="bg-slate-800 text-white px-3 py-2 rounded-2xl flex items-baseline gap-1 shadow-xl border-2 border-slate-700/50">
-                <span className="text-[10px] font-bold opacity-60 uppercase tracking-widest leading-none">Games</span>
-                <span className="text-xl font-black leading-none">{matchCount}</span>
-              </div>
-            </div>
-
-            {/* Desktop Header Toolbar */}
-            <div className="hidden lg:flex items-center gap-4">
-              {currentUser?.isPro ? (
-                <button
-                  onClick={() => handleUpgrade()}
-                  className="relative overflow-hidden bg-gradient-to-r from-amber-200 to-yellow-400 text-yellow-900 px-4 py-2 rounded-2xl font-black shadow-sm border-2 border-yellow-300 transform hover:scale-105 transition-all group"
-                  title={`到期日: ${currentUser.expiryDate ? new Date(currentUser.expiryDate).toLocaleDateString() : '未知'}`}
-                >
-                  <div className="flex items-center gap-2 group-hover:invisible transition-all duration-200">
-                    <span>👑 PRO</span>
-                    <span className="text-xs bg-white/40 px-2 py-0.5 rounded-full backdrop-blur-sm">
-                      剩 {currentUser.expiryDate ? Math.max(0, Math.ceil((new Date(currentUser.expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0} 天
-                    </span>
-                  </div>
-                  <div className="absolute inset-0 flex items-center justify-center font-black text-yellow-800 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-gradient-to-r from-amber-200 to-yellow-400">
-                    <span>➕ 延長效期</span>
-                  </div>
-                </button>
+          <header className="flex-shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 md:mb-8 pt-4 md:pt-0 px-4 md:px-0">
+            <div className="flex items-center gap-4">
+              {/* Use Avatar */}
+              {currentUser.pictureUrl ? (
+                <img src={currentUser.pictureUrl} alt={currentUser.displayName} className="w-12 h-12 rounded-full border-2 border-white shadow-md hidden lg:block" />
               ) : (
-                <button
-                  onClick={() => handleUpgrade()}
-                  className="bg-gradient-to-r from-amber-200 to-yellow-400 text-yellow-900 px-4 py-2 rounded-2xl font-black shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-1 border-2 border-yellow-300 animate-pulse"
-                >
-                  <span>👑</span> 升級 PRO
-                </button>
+                <div className="w-12 h-12 rounded-full bg-indigo-500 hidden lg:flex items-center justify-center text-xl text-white font-bold shadow-md">
+                  {currentUser.displayName.charAt(0)}
+                </div>
               )}
-
-              <button
-                onClick={() => setShowHistoryModal(true)}
-                className="bg-white px-4 py-2 rounded-2xl font-bold text-slate-600 shadow-sm border-2 border-slate-200 hover:border-slate-400 hover:text-slate-800 transition-all text-sm flex items-center gap-2"
-              >
-                📜 歷史
-              </button>
-
-              <button
-                onClick={handleEndSession}
-                className="px-4 py-2 rounded-2xl font-black transition-all shadow-sm text-sm border-2 bg-white border-slate-200 text-slate-400 hover:border-red-400 hover:text-red-500"
-              >
-                結束
-              </button>
-
-              <button onClick={addCourt} className="bg-white border-2 border-indigo-600 text-indigo-600 px-6 py-2 rounded-2xl font-black hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
-                ＋ 場地
-              </button>
-              <div className="bg-slate-800 text-white px-3 py-2 rounded-2xl flex items-baseline gap-2 shadow-xl border-2 border-slate-700/50">
-                <span className="text-[10px] font-bold opacity-60 uppercase tracking-widest leading-none">Games</span>
-                <span className="text-xl font-black leading-none">{matchCount}</span>
+              <div>
+                <h1 className="text-4xl font-black bg-gradient-to-br from-indigo-600 to-blue-500 bg-clip-text text-transparent italic tracking-tighter">
+                  SHUTTLE MASTER AI
+                </h1>
+                <div className="flex items-center gap-2">
+                  <p className="text-slate-400 font-bold tracking-widest text-xs uppercase">Centralized Smart Queue System</p>
+                  <span className="hidden lg:inline-block w-1 h-1 bg-slate-300 rounded-full"></span>
+                  <p className="hidden lg:block text-slate-500 text-xs font-bold">Hi, {currentUser.displayName}</p>
+                  {currentUser.isPro && (
+                    <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md ml-2 shadow-sm border border-amber-200 tracking-wider">
+                      PRO
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 ml-auto">
-              <button
-                onClick={handleLogout}
-                className="hidden lg:flex items-center gap-1 bg-white px-3 py-1.5 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:bg-red-50 hover:border-red-200 text-slate-400 hover:text-red-500 ml-auto"
-                title="登出"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
+            <div className="flex flex-wrap items-center gap-4">
+              {/* 計分模式開關 (Desktop Only) */}
+              <div className="hidden lg:flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:border-amber-200">
+                <div className={`p-1.5 rounded-lg transition-colors ${isScoreEnabled ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-400'}`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-7.535 5.503a1 1 0 101.07 1.683c.852-.54 2.117-.824 3.465-.824s2.613.284 3.465.824a1 1 0 001.07-1.683C14.306 13.05 12.585 12.5 10.5 12.5s-3.806.55-5.035 1.503z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-slate-400 leading-none mb-0.5">計分模式</span>
+                  <span className={`text-[11px] font-bold leading-none ${isScoreEnabled ? 'text-amber-600' : 'text-slate-500'}`}>
+                    {isScoreEnabled ? '已開啟' : '已關閉'}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setIsScoreEnabled(!isScoreEnabled)}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isScoreEnabled ? 'bg-amber-500' : 'bg-slate-200'}`}
+                >
+                  <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isScoreEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                </button>
+              </div>
+
+              {/* 語音廣播開關 (Desktop Only) */}
+              <div className="hidden lg:flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:border-indigo-200">
+                <div className={`p-1.5 rounded-lg transition-colors ${isAutoBroadcastEnabled ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}>
+                  {isAutoBroadcastEnabled ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A9.954 9.954 0 0019 10a9.972 9.972 0 00-2.929-7.071 1 1 0 00-1.414 1.414A7.971 7.971 0 0117 10c0 1.258-.29 2.448-.807 3.507l-1.456-1.456A5.982 5.982 0 0015 10a5.983 5.983 0 00-1.757-4.243 1 1 0 00-1.415 1.415A3.983 3.983 0 0113 10c0 .64-.15 1.245-.417 1.783L3.707 2.293zM10 4v3.293L6.707 4H10z" clipRule="evenodd" /><path d="M10 16v-3.293l3.293 3.293H10zM1.707 15.293l14-14L14.293 2.707l-14 14 1.414 1.414z" /></svg>
+                  )}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-slate-400 leading-none mb-0.5">自動廣播</span>
+                  <span className={`text-[11px] font-bold leading-none ${isAutoBroadcastEnabled ? 'text-indigo-600' : 'text-slate-500'}`}>
+                    {isAutoBroadcastEnabled ? '已開啟' : '已關閉'}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setIsAutoBroadcastEnabled(!isAutoBroadcastEnabled)}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isAutoBroadcastEnabled ? 'bg-indigo-600' : 'bg-slate-200'}`}
+                >
+                  <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isAutoBroadcastEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                </button>
+              </div>
+
+              {/* Auto Assign (Desktop Only) */}
+              <div className="hidden lg:flex items-center gap-3 bg-white px-4 py-2 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:border-emerald-200">
+                <div className={`p-1.5 rounded-lg transition-colors ${isAutoAssignEnabled ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-slate-400 leading-none mb-0.5">自動上場 ({autoAssignInterval}s)</span>
+                  <span className={`text-[11px] font-bold leading-none ${isAutoAssignEnabled ? 'text-emerald-600' : 'text-slate-500'}`}>
+                    {isAutoAssignEnabled ? '開啟中' : '已關閉'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setIsAutoAssignEnabled(!isAutoAssignEnabled)}
+                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isAutoAssignEnabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isAutoAssignEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </button>
+                  {isAutoAssignEnabled && (
+                    <input
+                      type="number"
+                      min="2"
+                      max="60"
+                      value={autoAssignInterval}
+                      onChange={(e) => setAutoAssignInterval(Math.max(2, Math.min(60, Number(e.target.value))))}
+                      className="w-12 h-6 text-xs text-center border border-slate-200 rounded-md focus:outline-none focus:border-emerald-500"
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Mobile Menu Button (Docked) */}
+              {/* Mobile Header Toolbar: Menu, Players, Queue, Add, Games */}
+              <div className="lg:hidden flex items-center gap-2">
+                <button
+                  onClick={() => setActiveMobileView('menu')}
+                  className="p-1.5 rounded-xl bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all"
+                  aria-label="Menu"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setActiveMobileView('players')}
+                  className="p-1.5 rounded-xl bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all"
+                  aria-label="Players"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setActiveMobileView('queue')}
+                  className="p-1.5 rounded-xl bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all"
+                  aria-label="Queue"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </button>
+                <button onClick={addCourt} className="p-1.5 rounded-xl bg-white text-indigo-600 shadow-sm border-2 border-indigo-100 hover:bg-indigo-50 transition-all font-black text-lg w-[44px] h-[44px] flex items-center justify-center">
+                  ＋
+                </button>
+                <div className="bg-slate-800 text-white px-3 py-2 rounded-2xl flex items-baseline gap-1 shadow-xl border-2 border-slate-700/50">
+                  <span className="text-[10px] font-bold opacity-60 uppercase tracking-widest leading-none">Games</span>
+                  <span className="text-xl font-black leading-none">{matchCount}</span>
+                </div>
+              </div>
+
+              {/* Desktop Header Toolbar */}
+              <div className="hidden lg:flex items-center gap-4">
+                {currentUser?.isPro ? (
+                  <button
+                    onClick={() => handleUpgrade()}
+                    className="relative overflow-hidden bg-gradient-to-r from-amber-200 to-yellow-400 text-yellow-900 px-4 py-2 rounded-2xl font-black shadow-sm border-2 border-yellow-300 transform hover:scale-105 transition-all group"
+                    title={`到期日: ${currentUser.expiryDate ? new Date(currentUser.expiryDate).toLocaleDateString() : '未知'}`}
+                  >
+                    <div className="flex items-center gap-2 group-hover:invisible transition-all duration-200">
+                      <span>👑 PRO</span>
+                      <span className="text-xs bg-white/40 px-2 py-0.5 rounded-full backdrop-blur-sm">
+                        剩 {currentUser.expiryDate ? Math.max(0, Math.ceil((new Date(currentUser.expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0} 天
+                      </span>
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center font-black text-yellow-800 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-gradient-to-r from-amber-200 to-yellow-400">
+                      <span>➕ 延長效期</span>
+                    </div>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleUpgrade()}
+                    className="bg-gradient-to-r from-amber-200 to-yellow-400 text-yellow-900 px-4 py-2 rounded-2xl font-black shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-1 border-2 border-yellow-300 animate-pulse"
+                  >
+                    <span>👑</span> 升級 PRO
+                  </button>
+                )}
+
+                <button
+                  onClick={() => setShowHistoryModal(true)}
+                  className="bg-white px-4 py-2 rounded-2xl font-bold text-slate-600 shadow-sm border-2 border-slate-200 hover:border-slate-400 hover:text-slate-800 transition-all text-sm flex items-center gap-2"
+                >
+                  📜 歷史
+                </button>
+
+                <button
+                  onClick={handleEndSession}
+                  className="px-4 py-2 rounded-2xl font-black transition-all shadow-sm text-sm border-2 bg-white border-slate-200 text-slate-400 hover:border-red-400 hover:text-red-500"
+                >
+                  結束
+                </button>
+
+                <button onClick={addCourt} className="bg-white border-2 border-indigo-600 text-indigo-600 px-6 py-2 rounded-2xl font-black hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                  ＋ 場地
+                </button>
+                <div className="bg-slate-800 text-white px-3 py-2 rounded-2xl flex items-baseline gap-2 shadow-xl border-2 border-slate-700/50">
+                  <span className="text-[10px] font-bold opacity-60 uppercase tracking-widest leading-none">Games</span>
+                  <span className="text-xl font-black leading-none">{matchCount}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 ml-auto">
+                <button
+                  onClick={handleLogout}
+                  className="hidden lg:flex items-center gap-1 bg-white px-3 py-1.5 rounded-2xl border-2 border-slate-100 shadow-sm transition-all hover:bg-red-50 hover:border-red-200 text-slate-400 hover:text-red-500 ml-auto"
+                  title="登出"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </button>
+              </div>
             </div>
-          </div>
-        </header>
+          </header>
 
-        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-6 relative px-4 md:px-0 pb-4 md:pb-0 overflow-hidden">
-          {/* Mobile Sidebar Overlay */}
-          {activeMobileView !== 'none' && (
-            <div
-              className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden animate-in fade-in"
-              onClick={() => setActiveMobileView('none')}
-            />
-          )}
+          <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-6 relative px-4 md:px-0 pb-4 md:pb-0 overflow-hidden">
+            {/* Mobile Sidebar Overlay */}
+            {activeMobileView !== 'none' && (
+              <div
+                className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden animate-in fade-in"
+                onClick={() => setActiveMobileView('none')}
+              />
+            )}
 
-          {/* Left Column: Player Management (Sidebar on Mobile) */}
-          {/* Left Column: Mobile Sidebar (Fixed Drawer) */}
-          <div className={`
+            {/* Left Column: Player Management (Sidebar on Mobile) */}
+            {/* Left Column: Mobile Sidebar (Fixed Drawer) */}
+            <div className={`
             lg:hidden flex flex-col gap-6 h-full transition-transform duration-300 ease-in-out
             fixed inset-0 z-50 w-full bg-slate-100 p-4 shadow-2xl overflow-hidden
             ${(activeMobileView === 'menu' || activeMobileView === 'players') ? 'translate-x-0' : '-translate-x-full'}
           `}>
-            {/* Header for Mobile Sidebar */}
-            <div className="flex justify-between items-center mb-4 shrink-0 border-b border-slate-200 pb-4">
-              <h3 className="font-black text-2xl text-slate-800">
-                {activeMobileView === 'menu' ? 'Menu' : '👥 球員管理'}
-              </h3>
-              <div className="flex items-center gap-2">
-                {activeMobileView === 'players' && (
-                  <button
-                    onClick={() => setIsPlayerActionsCollapsed(!isPlayerActionsCollapsed)}
-                    className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-500 hover:bg-indigo-100 flex items-center justify-center transition-colors"
-                  >
-                    {isPlayerActionsCollapsed ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" /></svg>
-                    )}
-                  </button>
-                )}
-                <button onClick={() => setActiveMobileView('none')} className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold">✕</button>
-              </div>
-            </div>
-
-            {/* CONTENT: SYSTEM MENU (Only show if view is 'menu') */}
-            {(activeMobileView === 'menu') && (
-              <div className="space-y-4 shrink-0 overflow-y-auto flex-1 pb-24 custom-scrollbar">
-                {/* User Profile Card in Menu */}
-                <div className="bg-white p-4 rounded-2xl border border-indigo-100 shadow-sm flex items-center gap-4">
-                  {currentUser.pictureUrl ? (
-                    <img src={currentUser.pictureUrl} alt={currentUser.displayName} className="w-14 h-14 rounded-full border-2 border-indigo-100 shadow-sm" />
-                  ) : (
-                    <div className="w-14 h-14 rounded-full bg-indigo-500 flex items-center justify-center text-2xl text-white font-bold shadow-sm">
-                      {currentUser.displayName.charAt(0)}
-                    </div>
-                  )}
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                      <span className="font-black text-lg text-slate-800">{currentUser.displayName}</span>
-                      {currentUser.isPro && (
-                        <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md shadow-sm border border-amber-200 tracking-wider">
-                          PRO
-                        </span>
+              {/* Header for Mobile Sidebar */}
+              <div className="flex justify-between items-center mb-4 shrink-0 border-b border-slate-200 pb-4">
+                <h3 className="font-black text-2xl text-slate-800">
+                  {activeMobileView === 'menu' ? 'Menu' : '👥 球員管理'}
+                </h3>
+                <div className="flex items-center gap-2">
+                  {activeMobileView === 'players' && (
+                    <button
+                      onClick={() => setIsPlayerActionsCollapsed(!isPlayerActionsCollapsed)}
+                      className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-500 hover:bg-indigo-100 flex items-center justify-center transition-colors"
+                    >
+                      {isPlayerActionsCollapsed ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" /></svg>
                       )}
-                    </div>
-                    <span className="text-xs text-slate-400 font-bold">已登入</span>
-                  </div>
+                    </button>
+                  )}
+                  <button onClick={() => setActiveMobileView('none')} className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold">✕</button>
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl">🏆</span>
-                      <span className="font-bold text-slate-700">計分模式</span>
+              {/* CONTENT: SYSTEM MENU (Only show if view is 'menu') */}
+              {(activeMobileView === 'menu') && (
+                <div className="space-y-4 shrink-0 overflow-y-auto flex-1 pb-24 custom-scrollbar">
+                  {/* User Profile Card in Menu */}
+                  <div className="bg-white p-4 rounded-2xl border border-indigo-100 shadow-sm flex items-center gap-4">
+                    {currentUser.pictureUrl ? (
+                      <img src={currentUser.pictureUrl} alt={currentUser.displayName} className="w-14 h-14 rounded-full border-2 border-indigo-100 shadow-sm" />
+                    ) : (
+                      <div className="w-14 h-14 rounded-full bg-indigo-500 flex items-center justify-center text-2xl text-white font-bold shadow-sm">
+                        {currentUser.displayName.charAt(0)}
+                      </div>
+                    )}
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <span className="font-black text-lg text-slate-800">{currentUser.displayName}</span>
+                        {currentUser.isPro && (
+                          <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md shadow-sm border border-amber-200 tracking-wider">
+                            PRO
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs text-slate-400 font-bold">已登入</span>
                     </div>
-                    <button
-                      onClick={() => setIsScoreEnabled(!isScoreEnabled)}
-                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isScoreEnabled ? 'bg-amber-500' : 'bg-slate-200'}`}
-                    >
-                      <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isScoreEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
-                    </button>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl">📢</span>
-                      <span className="font-bold text-slate-700">自動廣播</span>
-                    </div>
-                    <button
-                      onClick={() => setIsAutoBroadcastEnabled(!isAutoBroadcastEnabled)}
-                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isAutoBroadcastEnabled ? 'bg-indigo-600' : 'bg-slate-200'}`}
-                    >
-                      <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isAutoBroadcastEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
-                    </button>
-                  </div>
-
-                  <div className="flex flex-col p-3 bg-white rounded-xl border border-slate-200 shadow-sm gap-3">
-                    <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
                       <div className="flex items-center gap-3">
-                        <span className="text-xl">🤖</span>
-                        <div className="flex flex-col">
-                          <span className="font-bold text-slate-700">自動上場</span>
-                          <span className="text-xs text-slate-400">系統每 {autoAssignInterval} 秒檢查空場</span>
-                        </div>
+                        <span className="text-xl">🏆</span>
+                        <span className="font-bold text-slate-700">計分模式</span>
                       </div>
                       <button
-                        onClick={() => setIsAutoAssignEnabled(!isAutoAssignEnabled)}
-                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isAutoAssignEnabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                        onClick={() => setIsScoreEnabled(!isScoreEnabled)}
+                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isScoreEnabled ? 'bg-amber-500' : 'bg-slate-200'}`}
                       >
-                        <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isAutoAssignEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                        <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isScoreEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
                       </button>
                     </div>
-                    {isAutoAssignEnabled && (
-                      <div className="flex items-center gap-3 px-2">
-                        <span className="text-xs font-bold text-slate-400">2s</span>
-                        <input
-                          type="range"
-                          min="2"
-                          max="60"
-                          step="1"
-                          value={autoAssignInterval}
-                          onChange={(e) => setAutoAssignInterval(Number(e.target.value))}
-                          className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-                        />
-                        <span className="text-xs font-bold text-slate-400">60s</span>
+
+                    <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">📢</span>
+                        <span className="font-bold text-slate-700">自動廣播</span>
                       </div>
-                    )}
-                  </div>
-                </div>
+                      <button
+                        onClick={() => setIsAutoBroadcastEnabled(!isAutoBroadcastEnabled)}
+                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isAutoBroadcastEnabled ? 'bg-indigo-600' : 'bg-slate-200'}`}
+                      >
+                        <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isAutoBroadcastEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                      </button>
+                    </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => { setShowHistoryModal(true); setActiveMobileView('none'); }}
-                    className="p-3 rounded-xl font-bold bg-white text-slate-600 shadow-sm border-2 border-slate-200 hover:border-slate-400 flex items-center justify-center gap-2"
-                  >
-                    📜 歷史紀錄
-                  </button>
-                  <button
-                    onClick={handleLogout}
-                    className="p-3 rounded-xl font-bold bg-white text-slate-400 shadow-sm border-2 border-slate-200 hover:bg-red-50 hover:text-red-500 flex items-center justify-center gap-2"
-                  >
-                    🚪 登出
-                  </button>
-                </div>
-
-                <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-bold text-slate-600">🅰️ 字體大小 (Font Size)</span>
-                    <span className="text-xs font-black bg-slate-100 text-slate-500 px-2 py-0.5 rounded">{fontSizeScale}%</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-slate-400">A</span>
-                    <input
-                      type="range"
-                      min="85"
-                      max="125"
-                      step="5"
-                      value={fontSizeScale}
-                      onChange={(e) => setFontSizeScale(Number(e.target.value))}
-                      className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                    />
-                    <span className="text-lg font-black text-slate-600">A</span>
-                  </div>
-                </div>
-
-                {currentUser?.isPro ? (
-                  <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-yellow-200 rounded-xl p-4 mb-3 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-yellow-800 font-black">
-                        <span className="text-xl">👑</span> PRO 會員效期中
+                    <div className="flex flex-col p-3 bg-white rounded-xl border border-slate-200 shadow-sm gap-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="text-xl">🤖</span>
+                          <div className="flex flex-col">
+                            <span className="font-bold text-slate-700">自動上場</span>
+                            <span className="text-xs text-slate-400">系統每 {autoAssignInterval} 秒檢查空場</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setIsAutoAssignEnabled(!isAutoAssignEnabled)}
+                          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isAutoAssignEnabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                        >
+                          <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isAutoAssignEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                        </button>
                       </div>
-                      <span className="bg-white/50 text-yellow-700 px-2 py-1 rounded-lg text-xs font-bold border border-yellow-100">
-                        剩餘 {currentUser.expiryDate ? Math.max(0, Math.ceil((new Date(currentUser.expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0} 天
-                      </span>
+                      {isAutoAssignEnabled && (
+                        <div className="flex items-center gap-3 px-2">
+                          <span className="text-xs font-bold text-slate-400">2s</span>
+                          <input
+                            type="range"
+                            min="2"
+                            max="60"
+                            step="1"
+                            value={autoAssignInterval}
+                            onChange={(e) => setAutoAssignInterval(Number(e.target.value))}
+                            className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                          />
+                          <span className="text-xs font-bold text-slate-400">60s</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="text-xs text-yellow-600/80 font-bold ml-1">
-                      到期日: {currentUser.expiryDate ? new Date(currentUser.expiryDate).toLocaleDateString() : '未知'}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => { setShowHistoryModal(true); setActiveMobileView('none'); }}
+                      className="p-3 rounded-xl font-bold bg-white text-slate-600 shadow-sm border-2 border-slate-200 hover:border-slate-400 flex items-center justify-center gap-2"
+                    >
+                      📜 歷史紀錄
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="p-3 rounded-xl font-bold bg-white text-slate-400 shadow-sm border-2 border-slate-200 hover:bg-red-50 hover:text-red-500 flex items-center justify-center gap-2"
+                    >
+                      🚪 登出
+                    </button>
+                  </div>
+
+                  <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-bold text-slate-600">🅰️ 字體大小 (Font Size)</span>
+                      <span className="text-xs font-black bg-slate-100 text-slate-500 px-2 py-0.5 rounded">{fontSizeScale}%</span>
                     </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-slate-400">A</span>
+                      <input
+                        type="range"
+                        min="85"
+                        max="125"
+                        step="5"
+                        value={fontSizeScale}
+                        onChange={(e) => setFontSizeScale(Number(e.target.value))}
+                        className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                      />
+                      <span className="text-lg font-black text-slate-600">A</span>
+                    </div>
+                  </div>
+
+                  {currentUser?.isPro ? (
+                    <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-yellow-200 rounded-xl p-4 mb-3 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-yellow-800 font-black">
+                          <span className="text-xl">👑</span> PRO 會員效期中
+                        </div>
+                        <span className="bg-white/50 text-yellow-700 px-2 py-1 rounded-lg text-xs font-bold border border-yellow-100">
+                          剩餘 {currentUser.expiryDate ? Math.max(0, Math.ceil((new Date(currentUser.expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0} 天
+                        </span>
+                      </div>
+                      <div className="text-xs text-yellow-600/80 font-bold ml-1">
+                        到期日: {currentUser.expiryDate ? new Date(currentUser.expiryDate).toLocaleDateString() : '未知'}
+                      </div>
+                      <button
+                        onClick={() => {
+                          setActiveMobileView('none');
+                          handleUpgrade();
+                        }}
+                        className="w-full py-2 bg-white border-2 border-yellow-300 text-yellow-700 rounded-xl font-black shadow-sm hover:bg-yellow-50 transition-all flex items-center justify-center gap-1"
+                      >
+                        <span>➕</span> 延長效期 (Extend)
+                      </button>
+                    </div>
+                  ) : (
                     <button
                       onClick={() => {
                         setActiveMobileView('none');
                         handleUpgrade();
                       }}
-                      className="w-full py-2 bg-white border-2 border-yellow-300 text-yellow-700 rounded-xl font-black shadow-sm hover:bg-yellow-50 transition-all flex items-center justify-center gap-1"
+                      className="w-full flex items-center justify-center gap-2 p-3 mb-3 bg-gradient-to-r from-amber-200 to-yellow-400 text-yellow-900 rounded-xl font-black shadow-lg shadow-yellow-200/50"
                     >
-                      <span>➕</span> 延長效期 (Extend)
+                      <span className="text-xl">👑</span> 升級 PRO (解鎖功能)
                     </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setActiveMobileView('none');
-                      handleUpgrade();
-                    }}
-                    className="w-full flex items-center justify-center gap-2 p-3 mb-3 bg-gradient-to-r from-amber-200 to-yellow-400 text-yellow-900 rounded-xl font-black shadow-lg shadow-yellow-200/50"
-                  >
-                    <span className="text-xl">👑</span> 升級 PRO (解鎖功能)
-                  </button>
-                )}
+                  )}
 
+                  <button
+                    onClick={handleEndSession}
+                    className="w-full p-3 rounded-xl font-black transition-all shadow-sm border-2 flex items-center justify-center gap-2 bg-slate-100 border-slate-200 text-slate-400 hover:bg-red-50 hover:text-red-500"
+                  >
+                    🛑 結束本次活動
+                  </button>
+                </div>
+              )}
+
+              {/* CONTENT: PLAYERS (Mobile Only) */}
+              {(activeMobileView === 'players') && (
+                <div className="flex flex-col gap-6 h-full overflow-hidden">
+                  {!isPlayerActionsCollapsed && (
+                    <div className="flex gap-3 mb-4 shrink-0 animate-in fade-in slide-in-from-top-1">
+                      <div className="flex-1">
+                        <AddPlayerForm onAdd={addPlayer} />
+                      </div>
+                      <button
+                        onClick={() => setShowImportModal(true)}
+                        className="flex-1 py-4 rounded-2xl border-2 border-dashed border-indigo-300 text-indigo-500 font-bold hover:bg-indigo-50 hover:border-indigo-500 hover:text-indigo-700 transition-all flex items-center justify-center gap-2 group"
+                      >
+                        <span className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 group-hover:scale-110 transition-all text-xl">📋</span>
+                        <span>批次匯入</span>
+                      </button>
+                    </div>
+                  )}
+                  <PlayerList
+                    players={players}
+                    courts={courts}
+                    matchQueue={matchQueue}
+                    history={history}
+                    playingPlayerIds={playingPlayerIds}
+                    queuedPlayerIds={queuedPlayerIds}
+                    onDelete={deletePlayer}
+                    onUpdateLevel={updatePlayerLevel}
+                    onUpdateTargetGames={updatePlayerTargetGames}
+                    onTogglePause={togglePlayerPause}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Left Column: Desktop Sidebar (Static) */}
+            <div className="hidden lg:col-span-3 lg:flex flex-col gap-6 h-full overflow-hidden">
+              <div className="flex gap-3 mb-2 shrink-0">
+                <div className="flex-1">
+                  <AddPlayerForm onAdd={addPlayer} />
+                </div>
                 <button
-                  onClick={handleEndSession}
-                  className="w-full p-3 rounded-xl font-black transition-all shadow-sm border-2 flex items-center justify-center gap-2 bg-slate-100 border-slate-200 text-slate-400 hover:bg-red-50 hover:text-red-500"
+                  onClick={() => setShowImportModal(true)}
+                  className="flex-1 py-4 rounded-2xl border-2 border-dashed border-indigo-300 text-indigo-500 font-bold hover:bg-indigo-50 hover:border-indigo-500 hover:text-indigo-700 transition-all flex items-center justify-center gap-2 group"
                 >
-                  🛑 結束本次活動
+                  <span className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 group-hover:scale-110 transition-all text-xl">📋</span>
+                  <span>批次匯入</span>
                 </button>
               </div>
-            )}
-
-            {/* CONTENT: PLAYERS (Mobile Only) */}
-            {(activeMobileView === 'players') && (
-              <div className="flex flex-col gap-6 h-full overflow-hidden">
-                {!isPlayerActionsCollapsed && (
-                  <div className="flex gap-3 mb-4 shrink-0 animate-in fade-in slide-in-from-top-1">
-                    <div className="flex-1">
-                      <AddPlayerForm onAdd={addPlayer} />
-                    </div>
-                    <button
-                      onClick={() => setShowImportModal(true)}
-                      className="flex-1 py-4 rounded-2xl border-2 border-dashed border-indigo-300 text-indigo-500 font-bold hover:bg-indigo-50 hover:border-indigo-500 hover:text-indigo-700 transition-all flex items-center justify-center gap-2 group"
-                    >
-                      <span className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 group-hover:scale-110 transition-all text-xl">📋</span>
-                      <span>批次匯入</span>
-                    </button>
-                  </div>
-                )}
-                <PlayerList
-                  players={players}
-                  courts={courts}
-                  matchQueue={matchQueue}
-                  history={history}
-                  playingPlayerIds={playingPlayerIds}
-                  queuedPlayerIds={queuedPlayerIds}
-                  onDelete={deletePlayer}
-                  onUpdateLevel={updatePlayerLevel}
-                  onUpdateTargetGames={updatePlayerTargetGames}
-                  onTogglePause={togglePlayerPause}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Left Column: Desktop Sidebar (Static) */}
-          <div className="hidden lg:col-span-3 lg:flex flex-col gap-6 h-full overflow-hidden">
-            <div className="flex gap-3 mb-2 shrink-0">
-              <div className="flex-1">
-                <AddPlayerForm onAdd={addPlayer} />
-              </div>
-              <button
-                onClick={() => setShowImportModal(true)}
-                className="flex-1 py-4 rounded-2xl border-2 border-dashed border-indigo-300 text-indigo-500 font-bold hover:bg-indigo-50 hover:border-indigo-500 hover:text-indigo-700 transition-all flex items-center justify-center gap-2 group"
-              >
-                <span className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-200 group-hover:scale-110 transition-all text-xl">📋</span>
-                <span>批次匯入</span>
-              </button>
+              <PlayerList
+                players={players}
+                courts={courts}
+                matchQueue={matchQueue}
+                history={history}
+                playingPlayerIds={playingPlayerIds}
+                queuedPlayerIds={queuedPlayerIds}
+                onDelete={deletePlayer}
+                onUpdateLevel={updatePlayerLevel}
+                onUpdateTargetGames={updatePlayerTargetGames}
+                onTogglePause={togglePlayerPause}
+              />
             </div>
-            <PlayerList
-              players={players}
-              courts={courts}
-              matchQueue={matchQueue}
-              history={history}
-              playingPlayerIds={playingPlayerIds}
-              queuedPlayerIds={queuedPlayerIds}
-              onDelete={deletePlayer}
-              onUpdateLevel={updatePlayerLevel}
-              onUpdateTargetGames={updatePlayerTargetGames}
-              onTogglePause={togglePlayerPause}
-            />
-          </div>
 
-          <div className={`lg:col-span-6 h-full flex flex-col min-h-0`}>
-            {/* Mobile Court list scroll container */}
-            <div className={`grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-6 flex-1 overflow-y-auto custom-scrollbar px-1 pb-40 content-start`}>
-              {courts.map(court => (
-                <CourtCard
-                  key={court.id}
-                  court={court}
-                  allPlayers={players}
-                  busyPlayerIds={busyPlayerIds}
-                  playingPlayerIds={playingPlayerIds}
-                  onEndMatch={endMatch}
-                  onCancelMatch={cancelMatch}
-                  onSwapPlayer={swapActivePlayer}
-                  onReplayBroadcast={replayBroadcast}
-                  onRemoveCourt={removeCourt}
-                  onUpdateName={updateCourtName}
-                  matchQueueCount={matchQueue.length}
-                  nextMatch={matchQueue[0]} // For visual indication
-                  onAssignNext={() => {
-                    const validIndex = matchQueue.findIndex(match => !match.some(id => playingPlayerIds.has(id)));
+            <div className={`lg:col-span-6 h-full flex flex-col min-h-0`}>
+              {/* Mobile Court list scroll container */}
+              <div className={`grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-6 flex-1 overflow-y-auto custom-scrollbar px-1 pb-40 content-start`}>
+                {courts.map(court => (
+                  <CourtCard
+                    key={court.id}
+                    court={court}
+                    allPlayers={players}
+                    busyPlayerIds={busyPlayerIds}
+                    playingPlayerIds={playingPlayerIds}
+                    onEndMatch={endMatch}
+                    onCancelMatch={cancelMatch}
+                    onSwapPlayer={swapActivePlayer}
+                    onReplayBroadcast={replayBroadcast}
+                    onRemoveCourt={removeCourt}
+                    onUpdateName={updateCourtName}
+                    matchQueueCount={matchQueue.length}
+                    nextMatch={matchQueue[0]} // For visual indication
+                    onAssignNext={() => {
+                      const validIndex = matchQueue.findIndex(match => !match.some(id => playingPlayerIds.has(id)));
 
-                    if (validIndex === -1) {
-                      // Try to suggest a Smart Swap with *Queued* players (Fairness + Level Balance)
-                      const topMatch = matchQueue[0];
-                      const busyInTop = topMatch.filter(id => playingPlayerIds.has(id));
+                      if (validIndex === -1) {
+                        // Try to suggest a Smart Swap with *Queued* players (Fairness + Level Balance)
+                        const topMatch = matchQueue[0];
+                        const busyInTop = topMatch.filter(id => playingPlayerIds.has(id));
 
-                      if (busyInTop.length > 0) {
-                        // Find candidates from *subsequent* matches in the queue
-                        const swaps: { busyId: string, targetId: string, matchIndex: number, matchPlayerIndex: number }[] = [];
-                        const usedTargetIds = new Set<string>();
+                        if (busyInTop.length > 0) {
+                          // Find candidates from *subsequent* matches in the queue
+                          const swaps: { busyId: string, targetId: string, matchIndex: number, matchPlayerIndex: number }[] = [];
+                          const usedTargetIds = new Set<string>();
 
-                        // Try to find a swap for each busy player
-                        for (const busyId of busyInTop) {
-                          const busyPlayer = players.find(p => p.id === busyId);
-                          if (!busyPlayer) continue;
+                          // Try to find a swap for each busy player
+                          for (const busyId of busyInTop) {
+                            const busyPlayer = players.find(p => p.id === busyId);
+                            if (!busyPlayer) continue;
 
-                          let bestCandidate: { id: string, matchIndex: number, playerIndex: number, score: number } | null = null;
+                            let bestCandidate: { id: string, matchIndex: number, playerIndex: number, score: number } | null = null;
 
-                          // Search matches starting from index 1
-                          for (let i = 1; i < matchQueue.length; i++) {
-                            const candidateMatch = matchQueue[i];
-                            if (candidateMatch.includes(busyId)) continue;
+                            // Search matches starting from index 1
+                            for (let i = 1; i < matchQueue.length; i++) {
+                              const candidateMatch = matchQueue[i];
+                              if (candidateMatch.includes(busyId)) continue;
 
-                            for (let j = 0; j < candidateMatch.length; j++) {
-                              const cId = candidateMatch[j];
-                              if (playingPlayerIds.has(cId) || usedTargetIds.has(cId) || topMatch.includes(cId)) continue;
+                              for (let j = 0; j < candidateMatch.length; j++) {
+                                const cId = candidateMatch[j];
+                                if (playingPlayerIds.has(cId) || usedTargetIds.has(cId) || topMatch.includes(cId)) continue;
 
-                              const candidate = players.find(p => p.id === cId);
-                              if (!candidate) continue;
+                                const candidate = players.find(p => p.id === cId);
+                                if (!candidate) continue;
 
-                              // Score: Level Diff (Lower is better) * 100 + Games Diff (Lower is better)
-                              // Primary: Level, Secondary: Games
-                              const levelDiff = Math.abs(candidate.level - busyPlayer.level);
-                              const gamesDiff = candidate.gamesPlayed; // Just prioritize low games
-                              const score = levelDiff * 1000 + gamesDiff;
+                                // Score: Level Diff (Lower is better) * 100 + Games Diff (Lower is better)
+                                // Primary: Level, Secondary: Games
+                                const levelDiff = Math.abs(candidate.level - busyPlayer.level);
+                                const gamesDiff = candidate.gamesPlayed; // Just prioritize low games
+                                const score = levelDiff * 1000 + gamesDiff;
 
-                              if (!bestCandidate || score < bestCandidate.score) {
-                                bestCandidate = { id: cId, matchIndex: i, playerIndex: j, score };
+                                if (!bestCandidate || score < bestCandidate.score) {
+                                  bestCandidate = { id: cId, matchIndex: i, playerIndex: j, score };
+                                }
                               }
+                            }
+
+                            if (bestCandidate) {
+                              swaps.push({ busyId, targetId: bestCandidate.id, matchIndex: bestCandidate.matchIndex, matchPlayerIndex: bestCandidate.playerIndex });
+                              usedTargetIds.add(bestCandidate.id);
                             }
                           }
 
-                          if (bestCandidate) {
-                            swaps.push({ busyId, targetId: bestCandidate.id, matchIndex: bestCandidate.matchIndex, matchPlayerIndex: bestCandidate.playerIndex });
-                            usedTargetIds.add(bestCandidate.id);
-                          }
-                        }
+                          // Only proceed if we found swaps for ALL busy players in top match
+                          if (swaps.length > 0 && swaps.length === busyInTop.length) {
+                            const swapDesc = swaps.map(s => {
+                              const bName = players.find(p => p.id === s.busyId)?.name;
+                              const tName = players.find(p => p.id === s.targetId)?.name;
+                              const bLevel = players.find(p => p.id === s.busyId)?.level;
+                              const tLevel = players.find(p => p.id === s.targetId)?.level;
+                              return `• ${bName} (忙/L${bLevel}) ↔ ${tName} (第${s.matchIndex + 1}組/L${tLevel})`;
+                            }).join('\n');
 
-                        // Only proceed if we found swaps for ALL busy players in top match
-                        if (swaps.length > 0 && swaps.length === busyInTop.length) {
-                          const swapDesc = swaps.map(s => {
-                            const bName = players.find(p => p.id === s.busyId)?.name;
-                            const tName = players.find(p => p.id === s.targetId)?.name;
-                            const bLevel = players.find(p => p.id === s.busyId)?.level;
-                            const tLevel = players.find(p => p.id === s.targetId)?.level;
-                            return `• ${bName} (忙/L${bLevel}) ↔ ${tName} (第${s.matchIndex + 1}組/L${tLevel})`;
-                          }).join('\n');
+                            if (window.confirm(`所有排程皆被卡住。\n建議與後方隊伍交換 (優先匹配等級) 以解鎖第一組：\n\n${swapDesc}\n\n是否執行交換並直接上場？`)) {
+                              let newQueue = [...matchQueue];
+                              let newTopMatch = [...topMatch];
 
-                          if (window.confirm(`所有排程皆被卡住。\n建議與後方隊伍交換 (優先匹配等級) 以解鎖第一組：\n\n${swapDesc}\n\n是否執行交換並直接上場？`)) {
-                            let newQueue = [...matchQueue];
-                            let newTopMatch = [...topMatch];
+                              // Apply swaps
+                              swaps.forEach(s => {
+                                // 1. Put target into top match
+                                const busyIdx = newTopMatch.indexOf(s.busyId);
+                                if (busyIdx !== -1) newTopMatch[busyIdx] = s.targetId;
 
-                            // Apply swaps
-                            swaps.forEach(s => {
-                              // 1. Put target into top match
-                              const busyIdx = newTopMatch.indexOf(s.busyId);
-                              if (busyIdx !== -1) newTopMatch[busyIdx] = s.targetId;
+                                // 2. Put busy into later match
+                                const laterMatch = [...newQueue[s.matchIndex]];
+                                laterMatch[s.matchPlayerIndex] = s.busyId;
+                                newQueue[s.matchIndex] = laterMatch;
+                              });
 
-                              // 2. Put busy into later match
-                              const laterMatch = [...newQueue[s.matchIndex]];
-                              laterMatch[s.matchPlayerIndex] = s.busyId;
-                              newQueue[s.matchIndex] = laterMatch;
-                            });
+                              // Update queue first to reflect the swap
+                              newQueue[0] = newTopMatch;
+                              setMatchQueue(newQueue.slice(1)); // Remove top match as we are assigning it
 
-                            // Update queue first to reflect the swap
-                            newQueue[0] = newTopMatch;
-                            setMatchQueue(newQueue.slice(1)); // Remove top match as we are assigning it
-
-                            // Assign the new top match immediately
-                            setCourts(prev => prev.map(c => {
-                              if (c.id === court.id) {
-                                const courtName = c.name;
-                                const pNames = players.filter(p => newTopMatch.includes(p.id)).map(p => p.name);
-                                if (pNames.length > 0 && isAutoBroadcastEnabled) {
-                                  geminiService.broadcastAnnouncement(pNames, courtName);
+                              // Assign the new top match immediately
+                              setCourts(prev => prev.map(c => {
+                                if (c.id === court.id) {
+                                  const courtName = c.name;
+                                  const pNames = players.filter(p => newTopMatch.includes(p.id)).map(p => p.name);
+                                  if (pNames.length > 0 && isAutoBroadcastEnabled) {
+                                    geminiService.broadcastAnnouncement(pNames, courtName);
+                                  }
+                                  return { ...c, players: newTopMatch, isActive: true, startTime: Date.now() };
                                 }
-                                return { ...c, players: newTopMatch, isActive: true, startTime: Date.now() };
-                              }
-                              return c;
-                            }));
-                            return;
-                          } else {
-                            return;
+                                return c;
+                              }));
+                              return;
+                            } else {
+                              return;
+                            }
                           }
                         }
+
+                        alert("目前佇列中所有對戰都有球員正在忙碌中，且後方無足夠閒置人員可供交換！");
+                        return;
                       }
 
-                      alert("目前佇列中所有對戰都有球員正在忙碌中，且後方無足夠閒置人員可供交換！");
-                      return;
-                    }
-
-                    if (validIndex === 0) {
-                      assignMatchToCourt(court.id, 0);
-                    } else {
-                      // Smart Skip
-                      const skippedCount = validIndex;
-                      if (window.confirm(`前 ${skippedCount} 組對戰有球員忙碌中，是否直接指派第 ${validIndex + 1} 組 (可上場)？`)) {
-                        assignMatchToCourt(court.id, validIndex);
+                      if (validIndex === 0) {
+                        assignMatchToCourt(court.id, 0);
+                      } else {
+                        // Smart Skip
+                        const skippedCount = validIndex;
+                        if (window.confirm(`前 ${skippedCount} 組對戰有球員忙碌中，是否直接指派第 ${validIndex + 1} 組 (可上場)？`)) {
+                          assignMatchToCourt(court.id, validIndex);
+                        }
                       }
-                    }
-                  }}
-                />
-              ))}
+                    }}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
 
-          <div className="hidden lg:col-span-3 lg:flex flex-col gap-6 h-full overflow-hidden">
-            <MatchQueue
-              queue={matchQueue}
-              allPlayers={players}
-              history={history}
-              busyPlayerIds={busyPlayerIds}
-              playingPlayerIds={playingPlayerIds}
-              onSchedule={scheduleQueue}
-              onNormalSchedule={normalScheduleQueue}
-              onAddBlankMatch={addBlankMatch}
-              onManualSchedule={manualScheduleQueue}
-              onRemove={removeFromQueue}
-              onReorder={reorderQueue}
-              onSwapPlayer={swapQueuePlayer}
-              isScheduling={isScheduling}
-              availableCourts={courts.filter(c => !c.isActive)}
-              onAssignToCourt={assignMatchToCourt}
-              onAutoAssignAll={autoAssignAllEmptyCourts}
-            />
-          </div>
+            <div className="hidden lg:col-span-3 lg:flex flex-col gap-6 h-full overflow-hidden">
+              <MatchQueue
+                queue={matchQueue}
+                allPlayers={players}
+                history={history}
+                busyPlayerIds={busyPlayerIds}
+                playingPlayerIds={playingPlayerIds}
+                onSchedule={scheduleQueue}
+                onNormalSchedule={normalScheduleQueue}
+                onAddBlankMatch={addBlankMatch}
+                onManualSchedule={manualScheduleQueue}
+                onRemove={removeFromQueue}
+                onReorder={reorderQueue}
+                onSwapPlayer={swapQueuePlayer}
+                isScheduling={isScheduling}
+                availableCourts={courts.filter(c => !c.isActive)}
+                onAssignToCourt={assignMatchToCourt}
+                onAutoAssignAll={autoAssignAllEmptyCourts}
+              />
+            </div>
 
-          {/* Mobile Right Sidebar: Queue */}
-          <div className={`
+            {/* Mobile Right Sidebar: Queue */}
+            <div className={`
             fixed inset-0 z-50 w-full bg-slate-100 p-0 shadow-2xl overflow-hidden flex flex-col transition-transform duration-300 ease-in-out lg:hidden
             ${activeMobileView === 'queue' ? 'translate-x-0' : 'translate-x-full'}
           `}
-            style={{ pointerEvents: activeMobileView === 'queue' ? 'auto' : 'none' }}
-          >
-            <div className="flex-1 min-h-0 h-full overflow-hidden pb-8">
-              {activeMobileView === 'queue' && (
-                <MatchQueue
-                  queue={matchQueue}
-                  allPlayers={players}
-                  history={history}
-                  busyPlayerIds={busyPlayerIds}
-                  playingPlayerIds={playingPlayerIds}
-                  onSchedule={scheduleQueue}
-                  onNormalSchedule={normalScheduleQueue}
-                  onAddBlankMatch={addBlankMatch}
-                  onManualSchedule={manualScheduleQueue}
-                  onRemove={removeFromQueue}
-                  onReorder={reorderQueue}
-                  onSwapPlayer={swapQueuePlayer}
-                  isScheduling={isScheduling}
-                  availableCourts={courts.filter(c => !c.isActive)}
-                  onAssignToCourt={assignMatchToCourt}
-                  onAutoAssignAll={autoAssignAllEmptyCourts}
-                  onClose={() => setActiveMobileView('none')}
-                />
-              )}
+              style={{ pointerEvents: activeMobileView === 'queue' ? 'auto' : 'none' }}
+            >
+              <div className="flex-1 min-h-0 h-full overflow-hidden pb-8">
+                {activeMobileView === 'queue' && (
+                  <MatchQueue
+                    queue={matchQueue}
+                    allPlayers={players}
+                    history={history}
+                    busyPlayerIds={busyPlayerIds}
+                    playingPlayerIds={playingPlayerIds}
+                    onSchedule={scheduleQueue}
+                    onNormalSchedule={normalScheduleQueue}
+                    onAddBlankMatch={addBlankMatch}
+                    onManualSchedule={manualScheduleQueue}
+                    onRemove={removeFromQueue}
+                    onReorder={reorderQueue}
+                    onSwapPlayer={swapQueuePlayer}
+                    isScheduling={isScheduling}
+                    availableCourts={courts.filter(c => !c.isActive)}
+                    onAssignToCourt={assignMatchToCourt}
+                    onAutoAssignAll={autoAssignAllEmptyCourts}
+                    onClose={() => setActiveMobileView('none')}
+                  />
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div >
 
-      {
-        showImportModal && (
-          <QuickImportModal onClose={() => setShowImportModal(false)} onImport={bulkAddPlayers} />
-        )
-      }
+        {
+          showImportModal && (
+            <QuickImportModal onClose={() => setShowImportModal(false)} onImport={bulkAddPlayers} />
+          )
+        }
 
-      {
-        showHistoryModal && (
-          <MatchHistoryList
-            history={history}
-            allPlayers={players}
-            onClose={() => setShowHistoryModal(false)}
-            currentUser={currentUser}
-          />
-        )
-      }
+        {
+          showHistoryModal && (
+            <MatchHistoryList
+              history={history}
+              allPlayers={players}
+              onClose={() => setShowHistoryModal(false)}
+              currentUser={currentUser}
+            />
+          )
+        }
 
-      {
-        endingCourtId && (
-          <ScoreInputModal
-            ids={courts.find(c => c.id === endingCourtId)?.players || []}
-            allPlayers={players}
-            onConfirm={(score) => finalizeMatch(endingCourtId, score)}
-            onCancel={() => setEndingCourtId(null)}
-            onSkip={() => finalizeMatch(endingCourtId)}
-          />
-        )
-      }
+        {
+          endingCourtId && (
+            <ScoreInputModal
+              ids={courts.find(c => c.id === endingCourtId)?.players || []}
+              allPlayers={players}
+              onConfirm={(score) => finalizeMatch(endingCourtId, score)}
+              onCancel={() => setEndingCourtId(null)}
+              onSkip={() => finalizeMatch(endingCourtId)}
+            />
+          )
+        }
 
-      <EndSessionModal
-        isOpen={showEndSessionModal}
-        onClose={() => setShowEndSessionModal(false)}
-        onClearHistoryOnly={handleClearHistoryOnly}
-        onClearAll={handleClearAll}
-      />
+        <EndSessionModal
+          isOpen={showEndSessionModal}
+          onClose={() => setShowEndSessionModal(false)}
+          onClearHistoryOnly={handleClearHistoryOnly}
+          onClearAll={handleClearAll}
+        />
 
-      <style>{`
+        <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
       `}</style>
-      {
-        ecpayData && <ECPayForm paymentData={ecpayData} />
-      }
+        {
+          ecpayData && <ECPayForm paymentData={ecpayData} />
+        }
 
-      <PricingModal
-        isOpen={showPricingModal}
-        onClose={() => setShowPricingModal(false)}
-        onSelectPlan={handleSelectPlan}
-        onRedeemCode={handleRedeemCode}
-        isLoading={paymentStatus === 'processing'}
-        activePromotion={activePromotion}
-      />
+        <PricingModal
+          isOpen={showPricingModal}
+          onClose={() => setShowPricingModal(false)}
+          onSelectPlan={handleSelectPlan}
+          onRedeemCode={handleRedeemCode}
+          isLoading={paymentStatus === 'processing'}
+          activePromotion={activePromotion}
+        />
 
-    </div >
+      </div>
+    </div>
   );
 };
 
