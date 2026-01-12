@@ -142,6 +142,13 @@ const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onSelectPl
                     </div>
                 )}
 
+                {/* Contact Info Footer (ECPay Requirement) */}
+                <div className="p-4 text-center border-t border-slate-100 bg-slate-50">
+                    <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                        Contact Us: <a href="mailto:shuttlemasterai@gmail.com" className="hover:text-indigo-600 transition-colors">shuttlemasterai@gmail.com</a>
+                    </p>
+                </div>
+
                 {/* Footer / Loading Overlay */}
                 {isLoading && (
                     <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center z-10">
