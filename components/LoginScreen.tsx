@@ -171,8 +171,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                     </div>
 
                     {/* Footer info */}
-                    <div className="bg-slate-50 p-4 border-t border-slate-100 text-center">
-                        <p className="text-[10px] text-slate-400">Version 1.2.2 • Smart Scheduler</p>
+                    <div className="bg-slate-50 p-4 border-t border-slate-100 text-center space-y-1">
+                        <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                            Contact Us: <a href="mailto:shuttlemasterai@outlook.com" className="hover:text-indigo-600 transition-colors">shuttlemasterai@outlook.com</a>
+                        </p>
+                        <p className="text-[10px] text-slate-400">Version 1.2.3 • Smart Scheduler</p>
                     </div>
                 </div>
             </div>
