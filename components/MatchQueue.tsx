@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Player, Gender, Court, MatchHistory, SortAlgorithm } from '../types';
+import AiSortInputModal from './AiSortInputModal';
+import { generateAiMatches } from '../services/geminiService';
 
 interface MatchQueueProps {
   queue: string[][];
@@ -9,7 +11,7 @@ interface MatchQueueProps {
   busyPlayerIds: Set<string>;
   playingPlayerIds: Set<string>;
   onSchedule: (rounds: number) => void;
-  onNormalSchedule: (rounds: number) => void;
+  onNormalSchedule: (rounds: number, algo: SortAlgorithm) => void;
   onAddBlankMatch: () => void;
   onManualSchedule: () => void;
   onRemove: (index: number) => void;
@@ -22,15 +24,43 @@ interface MatchQueueProps {
   onClose?: () => void;
   isPro: boolean;
   onUpgrade: () => void;
+  onAddMatches?: (matches: string[][]) => void;
 }
 
 const MatchQueue: React.FC<MatchQueueProps> = ({
   queue, allPlayers, history, busyPlayerIds, playingPlayerIds,
   onSchedule, onNormalSchedule, onAddBlankMatch, onManualSchedule, onRemove, onReorder, onSwapPlayer, isScheduling,
-  availableCourts, onAssignToCourt, onAutoAssignAll, onClose, isPro, onUpgrade
+  availableCourts, onAssignToCourt, onAutoAssignAll, onClose, isPro, onUpgrade, onAddMatches
 }) => {
   const [swappingIdx, setSwappingIdx] = useState<{ qIdx: number, pIdx: number } | null>(null);
   const [sortAlgorithm, setSortAlgorithm] = useState<SortAlgorithm>('normal');
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  const handleAiSubmit = async (instruction: string, count: number) => {
+    setAiError(null);
+    if (!onAddMatches) {
+      setAiError("System Error: Missing onAddMatches handler");
+      return;
+    }
+    setIsAiGenerating(true);
+    try {
+      const matches = await generateAiMatches(allPlayers, history, instruction, count);
+      const matchIds = matches.map(m => [...m.team1, ...m.team2]); // Flatten to string[]
+      onAddMatches(matchIds);
+      setShowAiModal(false);
+    } catch (e) {
+      setAiError((e as any).message || "Unknown Error");
+    } finally {
+      setIsAiGenerating(false);
+    }
+  };
+
+  // Clear error when opening modal
+  useEffect(() => {
+    if (showAiModal) setAiError(null);
+  }, [showAiModal]);
 
   const algorithmLabels: Record<SortAlgorithm, string> = {
     'normal': '普通智排',
@@ -126,8 +156,16 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
   };
 
   return (
-    <div className="bg-white md:rounded-3xl shadow-sm md:border border-slate-200 flex flex-col h-full overflow-hidden">
-      <div className="p-6 border-b bg-slate-50">
+    <div className="h-full flex flex-col bg-slate-50 relative">
+      <AiSortInputModal
+        isOpen={showAiModal}
+        onClose={() => setShowAiModal(false)}
+        onSubmit={handleAiSubmit}
+        isGenerating={isAiGenerating}
+        errorMessage={aiError}
+        defaultMatchCount={roundsToSchedule}
+      />
+      <div className="p-4 bg-white border-b shadow-sm z-10 shrink-0">
 
         {/* Header - Aligned with Player List Style */}
         <div className="flex justify-between items-center mb-4 shrink-0">
@@ -220,12 +258,18 @@ const MatchQueue: React.FC<MatchQueueProps> = ({
                         return;
                       }
 
+                      // Handle AI logic separately NEW
+                      if (sortAlgorithm === 'ai') {
+                        setShowAiModal(true); // NEW
+                        return;
+                      }
+
                       const label = algorithmLabels[sortAlgorithm];
                       if (window.confirm(`確定要執行「${label}」嗎？`)) {
                         if (sortAlgorithm === 'ai') {
                           onSchedule(roundsToSchedule);
                         } else {
-                          (onNormalSchedule as any)(roundsToSchedule, sortAlgorithm);
+                          (onNormalSchedule as any)(roundsToSchedule, sortAlgorithm); // Modified to pass sortAlgorithm
                         }
                       }
                     }}

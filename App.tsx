@@ -11,7 +11,7 @@ import ScoreInputModal from './components/ScoreInputModal';
 import EndSessionModal from './components/EndSessionModal';
 import LoginScreen from './components/LoginScreen';
 import { lineService } from './services/lineService';
-import { geminiService } from './services/geminiService';
+
 import { memberService } from './services/memberService';
 import { ecpayService } from './services/ecpayService';
 import ECPayForm, { ECPayPaymentData } from './components/ECPayForm';
@@ -995,22 +995,14 @@ const App: React.FC = () => {
   const scheduleQueue = async (roundsRequested: number = 5) => {
     if (players.length < 4) {
       alert("人數不足 4 人。");
-      return;
+      return; // Added return to make it a complete function that does nothing if condition met
     }
-    setIsScheduling(true);
-    try {
-      const candidatePlayers = players.filter(p => !playingPlayerIds.has(p.id) && !p.isPaused);
-      const suggestedRounds = await geminiService.suggestPairings(candidatePlayers, history, roundsRequested, matchQueue);
-      if (suggestedRounds.length > 0) setMatchQueue(prev => [...prev, ...suggestedRounds]);
-    } catch (error: any) {
-      if (error.message && error.message.includes("API Key is missing")) {
-        alert("請先設定 Gemini API Key 才能使用 AI 排點功能！");
-      } else {
-        alert("AI 排點失敗");
-      }
-    } finally {
-      setIsScheduling(false);
-    }
+    // AI Schedule Logic moved to MatchQueue component, this function is now a placeholder.
+    // It should not be called for AI scheduling anymore.
+  };
+
+  const addMatches = (newMatches: string[][]) => {
+    setMatchQueue(prev => [...prev, ...newMatches]);
   };
 
   const normalScheduleQueue = (roundsRequested: number = 5, algorithm: SortAlgorithm = 'normal') => {
@@ -1889,8 +1881,8 @@ const App: React.FC = () => {
                 history={history}
                 busyPlayerIds={busyPlayerIds}
                 playingPlayerIds={playingPlayerIds}
-                onSchedule={scheduleQueue}
-                onNormalSchedule={normalScheduleQueue}
+                onSchedule={() => { }} // Deprecated
+                onNormalSchedule={normalScheduleQueue} // Keep for other algos
                 onAddBlankMatch={addBlankMatch}
                 onManualSchedule={manualScheduleQueue}
                 onRemove={removeFromQueue}
@@ -1902,6 +1894,7 @@ const App: React.FC = () => {
                 onAutoAssignAll={autoAssignAllEmptyCourts}
                 isPro={currentUser?.isPro ?? false}
                 onUpgrade={() => handleUpgrade()}
+                onAddMatches={addMatches}
               />
             </div>
 
@@ -1920,8 +1913,8 @@ const App: React.FC = () => {
                     history={history}
                     busyPlayerIds={busyPlayerIds}
                     playingPlayerIds={playingPlayerIds}
-                    onSchedule={scheduleQueue}
-                    onNormalSchedule={normalScheduleQueue}
+                    onSchedule={() => { }} // Deprecated
+                    onNormalSchedule={normalScheduleQueue} // Keep for other algos
                     onAddBlankMatch={addBlankMatch}
                     onManualSchedule={manualScheduleQueue}
                     onRemove={removeFromQueue}
@@ -1934,6 +1927,7 @@ const App: React.FC = () => {
                     onClose={() => setActiveMobileView('none')}
                     isPro={currentUser?.isPro ?? false}
                     onUpgrade={() => handleUpgrade()}
+                    onAddMatches={addMatches}
                   />
                 )}
               </div>
